@@ -11,7 +11,7 @@ class BaseModel(torch.nn.Module):
         return 'BaseModel'
 
     def __init__(self):
-        super(BaseModel, self).__init__()
+        super().__init__()
 
     def initialize(self, opt):
         self.opt = opt

@@ -38,8 +38,14 @@ dataset:
     path: local_raw_dataset/ShapeNet/ShapeNetPointClouds
 
 model:
-  lr: 0.0001
-  criterion: # Name of loss function used
+  dummy_classifier:
+    lr: 0.0001
+    criterion: CE
+    scheduler_step_size: 25
+    scheduler_gamma: 0.5
+    dummy_network:
+      kernel_size: 3
+      padding: 1
 
 evaluation:
   ckpt_path: #Path of saved parameters
