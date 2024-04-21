@@ -1,10 +1,9 @@
 from torch import nn
-from losses.dice_loss import DiceLoss
-from losses.dice_loss_bce import DiceLossBCE
+from src.losses.dice_loss import DiceLoss
 import torch
 
 
-class BuildLoss():
+class BuildLoss:
     def __init__(self, configs):
         self.configs = configs
 

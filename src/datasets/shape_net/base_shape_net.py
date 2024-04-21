@@ -1,10 +1,9 @@
 """PyTorch base data set class each data set takes 2 sets of options a global one and a specific dataset config"""
-import torch
-from pathlib import Path
-from datasets.base_dataset import BaseDataSet
 import json
-import numpy as np
 import os
+from pathlib import Path
+
+from src.datasets.base_dataset import BaseDataSet
 
 
 class BaseShapeNet(BaseDataSet):

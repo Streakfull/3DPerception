@@ -1,4 +1,4 @@
-#adapted from https://github.com/fomalhautb/3D-RETR
+# adapted from https://github.com/fomalhautb/3D-RETR
 from torch import nn
 import torch
 

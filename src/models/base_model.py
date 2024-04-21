@@ -1,13 +1,14 @@
 import os
-from termcolor import colored, cprint
+from termcolor import cprint
 import torch
-import utils.util as util
+
 
 # modified from https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix
 
 
 class BaseModel(torch.nn.Module):
-    def name(self):
+    @staticmethod
+    def name():
         return 'BaseModel'
 
     def __init__(self):
@@ -51,8 +52,8 @@ class BaseModel(torch.nn.Module):
     # def eval(self):
     #     pass
 
-#     def to(self, device):
-#         pass
+    #     def to(self, device):
+    #         pass
 
     def inference(self):
         pass

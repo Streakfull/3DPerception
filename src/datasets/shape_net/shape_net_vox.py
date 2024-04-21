@@ -1,12 +1,8 @@
 """PyTorch datasets for loading ShapeNet voxels and ShapeNet point clouds from disk"""
-import torch
-from pathlib import Path
-import json
 import numpy as np
-import trimesh
-import os
-from utils.binvox_rw import read_as_3d_array
-from datasets.shape_net.base_shape_net import BaseShapeNet
+from src.datasets.shape_net.base_shape_net import BaseShapeNet
+
+from src.utils.binvox_rw import read_as_3d_array
 
 
 class ShapeNetVox(BaseShapeNet):

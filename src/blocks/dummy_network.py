@@ -1,8 +1,6 @@
-import torch.nn.functional as F
 import torch.nn as nn
 from einops import rearrange
-# from empatches import EMPatches
-import torch
+
 
 # A dummy network composed of a deep CNN for classification
 

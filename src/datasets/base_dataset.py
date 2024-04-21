@@ -2,8 +2,6 @@
 import torch
 from pathlib import Path
 
-import numpy as np
-
 
 class BaseDataSet(torch.utils.data.Dataset):
     def __init__(self, global_options, local_options):

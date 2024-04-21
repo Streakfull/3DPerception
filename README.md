@@ -48,7 +48,7 @@ If you have ideas for releases in the future, it is a good idea to list them in 
 
 ## Authors and acknowledgment
 
-- Mino Erstella - `email here`
+- Mino Erstella - m.estrella@rum.de
 - Youssef Youssef - youssef@youssef.tum.de
 
 ## Project status

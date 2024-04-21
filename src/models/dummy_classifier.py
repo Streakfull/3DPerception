@@ -1,10 +1,9 @@
 from typing import OrderedDict
-from models.base_model import BaseModel
-from blocks.dummy_network import DummyNetwork
-from losses.build_loss import BuildLoss
+from src.models.base_model import BaseModel
+from src.blocks.dummy_network import DummyNetwork
+from src.losses.build_loss import BuildLoss
 from torch import nn, optim
 import torch
-import numpy as np
 
 
 class DummyClassifier(BaseModel):
@@ -44,7 +43,7 @@ class DummyClassifier(BaseModel):
         return pred
 
     def get_metrics(self):
-        return OrderedDict([
+        return OrderedDict[
             ('loss', self.loss.data),
 
-        ])
+        ]

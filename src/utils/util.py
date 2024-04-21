@@ -1,13 +1,11 @@
-
 import os
 import random
+
 import numpy as np
 import torch
-from einops import rearrange
 from PIL import Image
 from cprint import *
-import io
-from matplotlib import pyplot as plt
+from einops import rearrange
 
 
 def iou(x_gt, x, thres):
@@ -16,8 +14,8 @@ def iou(x_gt, x, thres):
     # compute iou
     # > 0 free space, < 0 occupied
     x_gt_mask = x_gt.clone().detach()
-#     x_gt_mask[x_gt < thres_gt] = 0.
-#     x_gt_mask[x_gt >= thres_gt] = 1.
+    #     x_gt_mask[x_gt < thres_gt] = 0.
+    #     x_gt_mask[x_gt >= thres_gt] = 1.
 
     x_mask = x.clone().detach()
     x_mask[x < thres] = 0.
@@ -43,11 +41,6 @@ def iou(x_gt, x, thres):
 #     intersection = torch.sum(pred.mul(gt)).float()
 #     union = torch.sum(torch.ge(pred.add(gt), 1)).float()
 #     return intersection / union
-
-
-
-
-
 
 
 def save_image(image_numpy, image_path):
