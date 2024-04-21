@@ -1,0 +1,45 @@
+# This file contains all the configuration our different project components
+# Add configurations as needed
+
+training:
+  name: dummy_classification
+  description: Initial overfitting Experiment on shape net
+  extra_notes: none
+  experiment_id: 0
+  logs_dir: logs
+  is_train: true
+  device: cuda:0
+  batch_size: 8
+  n_epochs: 200
+  append_loss_every: 50
+  print_every: 150
+  #print_every: 10
+  validate_every: 4349
+  save_every: 500
+  save_every_nepochs: 10
+  start_epoch: 0
+  start_iteration: 0
+  visualize_every: 1000
+
+dataset:
+  path:
+    local_raw_dataset/ShapeNet/ShapeNetVox32 # For local testing without downloading shape => change to local_raw_dataset/ShapeNet
+    # Can be overriden by dataset specific path
+  overfit_size: 64
+  split: train # train | valid | test
+  is_overfit: true
+
+  shape_net_vox:
+    category: airplane
+    path: local_raw_dataset/ShapeNet/ShapeNetVox32
+
+  shape_net_point_cloud:
+    category: airplane
+    path: local_raw_dataset/ShapeNet/ShapeNetPointClouds
+
+model:
+  lr: 0.0001
+  criterion: # Name of loss function used
+
+evaluation:
+  ckpt_path: #Path of saved parameters

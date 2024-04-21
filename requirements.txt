@@ -1,0 +1,6 @@
+k3d==2.15.2
+tensorboard==2.11.0
+einops==0.6.1
+cprint==1.2.2
+Pillow==9.2.0
+omegaconf==2.3.0
