@@ -33,7 +33,7 @@ dataset:
     category: airplane
     path: local_raw_dataset/ShapeNet/ShapeNetVox32
 
-  shape_net_point_cloud:
+  shape_net_points:
     category: airplane
     path: local_raw_dataset/ShapeNet/ShapeNetPointClouds
 
