@@ -26,3 +26,11 @@ class BaseDataSet(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         return None
+
+    @staticmethod
+    def move_batch_to_device(batch, device):
+        raise Exception("Not Implemented method")
+
+    @staticmethod
+    def move_batch_to_device_float(batch, device):
+        raise Exception("Not Implemented method")

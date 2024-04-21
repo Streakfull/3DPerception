@@ -63,8 +63,9 @@ class BaseModel(torch.nn.Module):
     def update_lr(self):
         pass
 
-    def load_ckpt(self):
-        pass
+    def load_ckpt(self, ckpt_path):
+        self.load_state_dict(torch.load(ckpt_path))
+        cprint(f"Model loaded from {ckpt_path}")
 
     def tocuda(self, var_names):
         for name in var_names:

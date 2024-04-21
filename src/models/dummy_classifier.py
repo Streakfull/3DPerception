@@ -1,3 +1,4 @@
+from typing import OrderedDict
 from models.base_model import BaseModel
 from blocks.dummy_network import DummyNetwork
 from losses.build_loss import BuildLoss
@@ -39,3 +40,9 @@ class DummyClassifier(BaseModel):
         pred = self.forward(x)
         pred = torch.max(pred, dim=1).indices
         return pred
+
+    def get_metrics(self):
+        return OrderedDict([
+            ('loss', self.loss.data),
+
+        ])

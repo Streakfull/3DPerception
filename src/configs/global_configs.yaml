@@ -5,21 +5,23 @@ training:
   name: dummy_classification
   description: Initial overfitting Experiment on shape net
   extra_notes: none
-  experiment_id: 0
+  experiment_id: 1
   logs_dir: logs
   is_train: true
   device: cuda:0
   batch_size: 8
-  n_epochs: 200
+  n_epochs: 20
   append_loss_every: 50
-  print_every: 150
+  print_every: 1
   #print_every: 10
-  validate_every: 4349
-  save_every: 500
+  validate_every: 5
+  save_every: 5
   save_every_nepochs: 10
   start_epoch: 0
   start_iteration: 0
-  visualize_every: 1000
+  visualize_every: 5
+  load_ckpt: False
+  ckpt_path: test_path
 
 dataset:
   path:
