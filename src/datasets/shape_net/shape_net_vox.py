@@ -33,7 +33,9 @@ class ShapeNetVox(BaseShapeNet):
     @staticmethod
     def move_batch_to_device(batch, device):
         batch['voxels'] = batch['voxels'].float().to(device)
+        batch['label'] = batch['label'].to(device)
 
     @staticmethod
     def move_batch_to_device_float(batch, device):
         batch['voxels'] = batch['voxels'].float()
+        batch['label'] = batch['label']

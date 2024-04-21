@@ -34,7 +34,9 @@ class ShapeNetPoints(BaseShapeNet):
     @staticmethod
     def move_batch_to_device(batch, device):
         batch['points'] = batch['points'].float().to(device)
+        batch['label'] = batch['label'].to(device)
 
     @staticmethod
     def move_batch_to_device_float(batch, device):
         batch['points'] = batch['points'].float()
+        batch['label'] = batch['label']

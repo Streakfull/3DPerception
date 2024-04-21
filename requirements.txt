@@ -4,3 +4,4 @@ einops==0.6.1
 cprint==1.2.2
 Pillow==9.2.0
 omegaconf==2.3.0
+trimesh==4.3.1

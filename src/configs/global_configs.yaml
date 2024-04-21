@@ -5,7 +5,7 @@ training:
   name: dummy_classification
   description: Initial overfitting Experiment on shape net
   extra_notes: none
-  experiment_id: 4
+  experiment_id: 12
   logs_dir: logs
   is_train: true
   device: cuda:0
@@ -41,7 +41,7 @@ dataset:
 
 model:
   dummy_classifier:
-    lr: 0.0001
+    lr: 0.01
     criterion: CE
     scheduler_step_size: 25
     scheduler_gamma: 0.5

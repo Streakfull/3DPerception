@@ -22,7 +22,7 @@ class DummyClassifier(BaseModel):
         self.target = x["label"]
         x = self.network(x["voxels"])
         self.predictions = x
-        return self.softmax(self.predictions)
+        return x
 
     def backward(self):
         self.loss = self.criterion(self.predictions, self.target)
@@ -37,7 +37,9 @@ class DummyClassifier(BaseModel):
 
     def inference(self, x):
         self.eval()
-        pred = self.forward(x)
+        x = self.forward(x)
+        self.backward()
+        pred = self.softmax(x)
         pred = torch.max(pred, dim=1).indices
         return pred
 
