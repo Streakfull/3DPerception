@@ -28,7 +28,7 @@ class ModelTrainer:
                               dataset_type=dataset_type,
                               batch_size=self.training_config['batch_size'],
                               test_size=self.training_config['test_size'],
-                              num_workers=self.global_configs['num_workers']).get_dataloaders())
+                              num_workers=self.training_config['num_workers']).get_dataloaders())
         self.model, self.train_vars = self._prepare_model()
 
     def _prepare_model(self):
