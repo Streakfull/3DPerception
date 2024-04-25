@@ -1,33 +1,17 @@
-from datetime import datetime
-from dataclasses import dataclass
-from pathlib import Path
 from typing import Type
 
 import numpy as np
 import torch
 import yaml
 from cprint import *
-from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
+
+from src.datasets.base_dataset import BaseDataSet
 from src.datasets.shape_net.shape_net_vox import ShapeNetVox
 from src.models.dummy_classifier import DummyClassifier
-from src.datasets.base_dataset import BaseDataSet
 from src.training.DataLoaderHandler import DataLoaderHandler
-from src.training.Logger import Logger
+from src.training.Logger import Logger, TrainingVariables
 
-
-@dataclass
-class TrainingVariables:
-    def __init__(self, experiment_dir, train_loss_running=0., best_loss_val=np.inf, start_iteration=0, last_loss=0.):
-        self.train_loss_running = train_loss_running
-        self.best_loss_val = best_loss_val
-        self.start_iteration = start_iteration
-        tb_dir = f"{experiment_dir}/tb"
-        self.writer = SummaryWriter(log_dir=tb_dir)
-        self.model_checkpoint_path = f"{experiment_dir}/checkpoints"
-        self.loss_log_name = f"{experiment_dir}/loss_log.txt"
-        self.visuals_path = f"{experiment_dir}/visuals"
-        self.last_loss = last_loss
 
 class ModelTrainer:
     def __init__(self, dataset_type: Type[BaseDataSet] = ShapeNetVox, configs_path="./configs/global_configs.yaml",
@@ -41,9 +25,10 @@ class ModelTrainer:
 
         self.train_dataloader, self.validation_dataloader = (
             DataLoaderHandler(global_configs=self.global_configs,
-                              batch_size=self.training_config['batch_size'],
                               dataset_type=dataset_type,
-                              test_size=test_size).get_dataloaders())
+                              batch_size=self.training_config['batch_size'],
+                              test_size=self.training_config['test_size'],
+                              num_workers=self.global_configs['num_workers']).get_dataloaders())
         self.model, self.train_vars = self._prepare_model()
 
     def _prepare_model(self):
@@ -144,7 +129,8 @@ class ModelTrainer:
             if epoch < start_epoch:
                 continue
             self._train_one_epoch(epoch, self.train_vars.writer)
-            # if(epoch % config["save_every_nepochs"]==0):
-            self.model.save(self.train_vars.model_checkpoint_path, epoch)
+            if epoch % self.training_config["save_every_nepochs"] == 0:
+                self.model.save(self.train_vars.model_checkpoint_path, epoch)
             self.model.update_lr()
             self.train_vars.writer.close()
+        self.model.save(self.train_vars.model_checkpoint_path)

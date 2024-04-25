@@ -7,9 +7,11 @@ from src.datasets.base_dataset import BaseDataSet
 
 
 class DataLoaderHandler:
-    def __init__(self, global_configs: DictConfig, batch_size: int, dataset_type: Type[BaseDataSet], test_size: float):
+    def __init__(self, global_configs: DictConfig, dataset_type: Type[BaseDataSet], batch_size: int,
+                 num_workers: int = 1, test_size: float = 0.2):
         global_dataset_config = global_configs["dataset"]
-        local_dataset_config = global_dataset_config["shape_net_vox"]
+        dataset_field = global_dataset_config["dataset_field"]
+        local_dataset_config = global_dataset_config[dataset_field]
         dataset = dataset_type(global_dataset_config, local_dataset_config)
         print('length: ', len(dataset))
 
@@ -19,7 +21,7 @@ class DataLoaderHandler:
             train_ds,
             batch_size=batch_size,
             shuffle=True,
-            num_workers=1,  # Data is usually loaded in parallel by num_workers
+            num_workers=num_workers,  # Data is usually loaded in parallel by num_workers
             pin_memory=True,  # This is an implementation detail to speed up data uploading to the GPU
         )
 
@@ -27,7 +29,7 @@ class DataLoaderHandler:
             valid_ds,
             batch_size=batch_size,
             shuffle=True,
-            num_workers=1,  # Data is usually loaded in parallel by num_workers
+            num_workers=num_workers,  # Data is usually loaded in parallel by num_workers
             pin_memory=True,  # This is an implementation detail to speed up data uploading to the GPU
         )
 
