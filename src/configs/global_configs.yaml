@@ -43,7 +43,10 @@ dataset:
     path: local_raw_dataset/ShapeNet/ShapeNetPointClouds
 
 model:
+  model_field: dummy_classifier
   dummy_classifier:
+    model_filepath: models/dummy_classifier.py
+    model_class: DummyClassifier
     lr: 0.01
     criterion: CE
     scheduler_step_size: 25

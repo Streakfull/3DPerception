@@ -13,6 +13,5 @@ class TrainingVariables:
         tb_dir = f"{experiment_dir}/tb"
         self.writer = SummaryWriter(log_dir=tb_dir)
         self.model_checkpoint_path = f"{experiment_dir}/checkpoints"
-        self.loss_log_name = f"{experiment_dir}/loss_log.txt"
         self.visuals_path = f"{experiment_dir}/visuals"
         self.last_loss = last_loss

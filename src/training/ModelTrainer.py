@@ -8,20 +8,21 @@ from tqdm import tqdm
 
 from src.datasets.base_dataset import BaseDataSet
 from src.datasets.shape_net.shape_net_vox import ShapeNetVox
-from src.models.dummy_classifier import DummyClassifier
 from src.training.DataLoaderHandler import DataLoaderHandler
-from src.training.Logger import Logger, TrainingVariables
+from src.training.Logger import Logger
+from src.training.ModelBuilder import ModelBuilder
+from src.training.TrainingVariables import TrainingVariables
 
 
 class ModelTrainer:
-    def __init__(self, dataset_type: Type[BaseDataSet] = ShapeNetVox, configs_path="./configs/global_configs.yaml",
-                 test_size=0.2):
+    def __init__(self, dataset_type: Type[BaseDataSet] = ShapeNetVox, configs_path="./configs/global_configs.yaml"):
         self.dataset_type = dataset_type
         with open(configs_path, "r") as in_file:
             self.global_configs = yaml.safe_load(in_file)
         self.training_config = self.global_configs["training"]
         self.device = self.training_config["device"]
-        self.experiment_dir = Logger(self.training_config).experiment_dir
+        self.logger = Logger(self.training_config)
+        self.experiment_dir = self.logger.experiment_dir
 
         self.train_dataloader, self.validation_dataloader = (
             DataLoaderHandler(global_configs=self.global_configs,
@@ -29,49 +30,26 @@ class ModelTrainer:
                               batch_size=self.training_config['batch_size'],
                               test_size=self.training_config['test_size'],
                               num_workers=self.training_config['num_workers']).get_dataloaders())
-        self.model, self.train_vars = self._prepare_model()
-
-    def _prepare_model(self):
-        model_configs = self.global_configs["model"]["dummy_classifier"]
-        if "cpu" == self.device:
-            cprint.warn('Using CPU')
-        else:
-            cprint.ok('Using device:', self.device)
-
-        model = DummyClassifier(model_configs)
-        model.to(self.device)
-
-        if self.training_config["load_ckpt"]:
-            model.load_ckpt(self.training_config['ckpt_path'])
-
-        if torch.cuda.is_available():
-            torch.cuda.mem_get_info()
-
-        train_vars = TrainingVariables(experiment_dir=self.experiment_dir, train_loss_running=0., best_loss_val=np.inf,
-                                       start_iteration=self.training_config["start_iteration"], last_loss=0.)
-        return model, train_vars
+        self.train_vars = TrainingVariables(experiment_dir=self.experiment_dir, train_loss_running=0.,
+                                            best_loss_val=np.inf,
+                                            start_iteration=self.training_config["start_iteration"], last_loss=0.)
+        self.model = ModelBuilder(self.global_configs["model"], self.training_config).get_model()
 
     def _train_one_epoch(self, epoch, writer):
         train_loss_running = 0.
         iteration = 0
-        with open(self.train_vars.loss_log_name, "a") as log_file:
-            log_file.write(f'** Epoch: {epoch} **\n')
+        self.logger.start_new_epoch(epoch)
         for batch_idx, batch in tqdm(enumerate(self.train_dataloader), total=len(self.train_dataloader)):
             iteration += 1
             if iteration <= self.train_vars.start_iteration:
                 continue
             self.dataset_type.move_batch_to_device(batch, self.device)
             self.model.step(batch)
-            metrics = self.model.get_metrics()
-            loss = metrics["loss"]
+            loss = self.model.get_metrics().get("loss")
             train_loss_running += loss
+
             # log loss
-            if iteration % self.training_config["append_loss_every"] == (
-                    self.training_config["append_loss_every"] - 1) or (
-                    epoch == 0 and iteration == 0):
-                message = '(epoch: %d, iters: %d, loss: %.6f)' % (epoch, iteration, loss.item())
-                with open(self.train_vars.loss_log_name, "a") as log_file:
-                    log_file.write('%s\n' % message)
+            self.logger.log_loss(epoch, iteration, loss)
 
             # visualization step
             # if iteration % self.training_config["visualize_every"] == (self.training_config["visualize_every"] - 1):
@@ -97,17 +75,17 @@ class ModelTrainer:
                     epoch == 0 and iteration == 0):
                 cprint.ok("Running Validation")
                 self.model.eval()
-                loss_val = 0.
+                val_loss_running = 0.
                 index_batch = 0
                 for _, batch_val in tqdm(enumerate(self.validation_dataloader), total=len(
                         self.validation_dataloader)):
                     with torch.no_grad():
                         self.dataset_type.move_batch_to_device(batch_val, self.device)
                         self.model.inference(batch_val)
-                        metrics = self.model.get_metrics()
-                        loss_val += metrics["loss"]
+                        val_loss = self.model.get_metrics().get("loss")
+                        val_loss_running += val_loss
                         index_batch += 1
-                avg_loss_val = loss_val / index_batch
+                avg_loss_val = val_loss_running / index_batch
 
                 # Do visualizations here
                 if avg_loss_val < self.train_vars.best_loss_val:
