@@ -8,7 +8,7 @@ from src.datasets.base_dataset import BaseDataSet
 
 class BaseShapeNet(BaseDataSet):
     def __init__(self, dataset_options, shape_net_options, cat=None):
-        self.cat = shape_net_options["category"] if cat is None else cat
+        self.cat = shape_net_options.get("category", "all") if cat is None else cat
         self.num_classes = 13
         self.class_name_mapping = json.loads(
             Path("datasets/shape_net/shape_info.json").read_text())

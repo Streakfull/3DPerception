@@ -43,7 +43,4 @@ class DummyClassifier(BaseModel):
         return pred
 
     def get_metrics(self):
-        return OrderedDict[
-            ('loss', self.loss.data),
-
-        ]
+        return {'loss': self.loss.data}

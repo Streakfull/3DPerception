@@ -4,11 +4,11 @@ from pathlib import Path
 
 
 class BaseDataSet(torch.utils.data.Dataset):
-    def __init__(self, global_options, local_options):
+    def __init__(self, global_options: dict, local_options: dict):
         self.global_options = global_options
         self.local_options = local_options
-        self.is_overfit = self.global_options["is_overfit"]
-        self.overfit_size = self.global_options["overfit_size"]
+        self.is_overfit = self.global_options.get("is_overfit", False)
+        self.overfit_size = self.global_options.get("overfit_size", 0)
         local_options_path = local_options.get("path", None)
         self.dataset_path = Path(
             local_options_path if local_options_path is not None else global_options["path"])
@@ -18,7 +18,7 @@ class BaseDataSet(torch.utils.data.Dataset):
         return []
 
     def __len__(self):
-        if (self.is_overfit and self.overfit_size < len(self.items)):
+        if (self.is_overfit and self.overfit_size != 0 and self.overfit_size < len(self.items)):
             return self.overfit_size
         return len(self.items)
 

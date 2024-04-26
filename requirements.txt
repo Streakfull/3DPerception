@@ -9,4 +9,8 @@ torch==2.2.2
 torchaudio==2.2.2
 torchvision==0.17.2
 matplotlib==3.8.4
-termcolor
+termcolor==2.4.0
+scikit-learn==1.4.2
+numpy~=1.26.4
+PyYAML~=6.0.1
+tqdm~=4.66.2

@@ -10,6 +10,8 @@ training:
   is_train: true
   device: cuda:0
   batch_size: 8
+  num_workers: 1
+  test_size: 0.2
   n_epochs: 20
   append_loss_every: 1
   print_every: 1
@@ -24,6 +26,7 @@ training:
   ckpt_path: test_path
 
 dataset:
+  dataset_field: shape_net_vox
   path:
     local_raw_dataset/ShapeNet/ShapeNetVox32 # For local testing without downloading shape => change to local_raw_dataset/ShapeNet
     # Can be overriden by dataset specific path
@@ -40,7 +43,10 @@ dataset:
     path: local_raw_dataset/ShapeNet/ShapeNetPointClouds
 
 model:
+  model_field: dummy_classifier
   dummy_classifier:
+    model_filepath: models/dummy_classifier.py
+    model_class: DummyClassifier
     lr: 0.01
     criterion: CE
     scheduler_step_size: 25
