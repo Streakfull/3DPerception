@@ -1,13 +1,9 @@
-from typing import Type
-
 import numpy as np
 import torch
 import yaml
 from cprint import *
 from tqdm import tqdm
 
-from src.datasets.base_dataset import BaseDataSet
-from src.datasets.shape_net.shape_net_vox import ShapeNetVox
 from src.training.DataLoaderHandler import DataLoaderHandler
 from src.training.Logger import Logger
 from src.training.ModelBuilder import ModelBuilder
@@ -15,27 +11,25 @@ from src.training.TrainingVariables import TrainingVariables
 
 
 class ModelTrainer:
-    def __init__(self, dataset_type: Type[BaseDataSet] = ShapeNetVox, configs_path="./configs/global_configs.yaml"):
-        self.dataset_type = dataset_type
+    def __init__(self, configs_path="./configs/global_configs.yaml"):
         with open(configs_path, "r") as in_file:
             self.global_configs = yaml.safe_load(in_file)
         self.training_config = self.global_configs["training"]
         self.device = self.training_config["device"]
         self.logger = Logger(self.training_config)
         self.experiment_dir = self.logger.experiment_dir
-
-        self.train_dataloader, self.validation_dataloader = (
-            DataLoaderHandler(global_configs=self.global_configs,
-                              dataset_type=dataset_type,
-                              batch_size=self.training_config['batch_size'],
-                              test_size=self.training_config['test_size'],
-                              num_workers=self.training_config['num_workers']).get_dataloaders())
+        data_loader_handler = DataLoaderHandler(global_configs=self.global_configs,
+                                                batch_size=self.training_config['batch_size'],
+                                                test_size=self.training_config['test_size'],
+                                                num_workers=self.training_config['num_workers'])
+        self.train_dataloader, self.validation_dataloader = data_loader_handler.get_dataloaders()
+        self.dataset_type = data_loader_handler.dataset_type
         self.train_vars = TrainingVariables(experiment_dir=self.experiment_dir, train_loss_running=0.,
                                             best_loss_val=np.inf,
                                             start_iteration=self.training_config["start_iteration"], last_loss=0.)
         self.model = ModelBuilder(self.global_configs["model"], self.training_config).get_model()
 
-    def _train_one_epoch(self, epoch, writer):
+    def _train_one_epoch(self, epoch):
         train_loss_running = 0.
         iteration = 0
         self.logger.start_new_epoch(epoch)
@@ -61,7 +55,7 @@ class ModelTrainer:
                     epoch == 0 and iteration == 0):
                 avg_train_loss = train_loss_running / iteration
                 cprint.warn(f'[{epoch:03d}/{batch_idx:05d}] train_loss: {avg_train_loss:.6f}')
-                writer.add_scalar("Train/Loss", avg_train_loss, iteration)
+                self.logger.add_scalar("Train/Loss", avg_train_loss, iteration)
                 self.train_vars.last_loss = avg_train_loss
                 train_loss_running = 0.
 
@@ -95,20 +89,20 @@ class ModelTrainer:
                 cprint.warn(
                     f'[{epoch:03d}/{batch_idx:05d}] val_loss: {avg_loss_val:.6f} | best_loss_val: '
                     f'{self.train_vars.best_loss_val:.6f}')
-                writer.add_scalar("Validation/Loss", avg_loss_val, iteration)
-                writer.add_scalars('Validation/LossComparison',
-                                   {'Training': self.train_vars.last_loss, 'Validation': avg_loss_val},
-                                   iteration)
-                writer.flush()
+                self.logger.add_scalar("Validation/Loss", avg_loss_val, iteration)
+                self.logger.add_scalars('Validation/LossComparison',
+                                        {'Training': self.train_vars.last_loss, 'Validation': avg_loss_val},
+                                        iteration)
+                self.logger.flush_writer()
 
     def train(self):
         start_epoch = self.training_config["start_epoch"]
         for epoch in tqdm(range(self.training_config['n_epochs'])):
             if epoch < start_epoch:
                 continue
-            self._train_one_epoch(epoch, self.train_vars.writer)
+            self._train_one_epoch(epoch)
             if epoch % self.training_config["save_every_nepochs"] == 0:
                 self.model.save(self.train_vars.model_checkpoint_path, epoch)
             self.model.update_lr()
-            self.train_vars.writer.close()
+            self.logger.close_writer()
         self.model.save(self.train_vars.model_checkpoint_path)

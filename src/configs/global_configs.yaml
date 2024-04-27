@@ -35,10 +35,14 @@ dataset:
   is_overfit: true
 
   shape_net_vox:
+    class_filepath: datasets/shape_net/shape_net_vox.py
+    class: ShapeNetVox
     category: airplane
     path: local_raw_dataset/ShapeNet/ShapeNetVox32
 
   shape_net_points:
+    class_filepath: datasets/shape_net/shape_net_points.py
+    class: ShapeNetPoints
     category: airplane
     path: local_raw_dataset/ShapeNet/ShapeNetPointClouds
 

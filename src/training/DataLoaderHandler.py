@@ -1,18 +1,20 @@
-from typing import Type
+from pathlib import Path
 
-from omegaconf import DictConfig
-from torch.utils.data import DataLoader, Subset
 from sklearn.model_selection import train_test_split
-from src.datasets.base_dataset import BaseDataSet
+from torch.utils.data import DataLoader, Subset
+
+from src.training.ModuleLoader import load_module_from_path
 
 
 class DataLoaderHandler:
-    def __init__(self, global_configs: DictConfig, dataset_type: Type[BaseDataSet], batch_size: int,
+    def __init__(self, global_configs: dict, batch_size: int,
                  num_workers: int = 1, test_size: float = 0.2):
         global_dataset_config = global_configs["dataset"]
         dataset_field = global_dataset_config["dataset_field"]
         local_dataset_config = global_dataset_config[dataset_field]
-        dataset = dataset_type(global_dataset_config, local_dataset_config)
+        self.dataset_type = load_module_from_path(filepath=Path(local_dataset_config["class_filepath"]),
+                                                  class_name=local_dataset_config["class"])
+        dataset = self.dataset_type(global_dataset_config, local_dataset_config)
         print('length: ', len(dataset))
 
         train_ds, valid_ds = self.train_val_dataset(dataset, test_size)

@@ -2,8 +2,10 @@ import json
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from cprint import *
+from torch.utils.tensorboard import SummaryWriter
 
 from src.utils.util import mkdir
 
@@ -21,6 +23,20 @@ class Logger:
 
         self.make_log_files(training_config)
         self.make_dirs()
+        self._writer = SummaryWriter(f"{self.experiment_dir}/tb")
+
+    def add_scalar(self, tag: str, scalar_value: Any, global_step: int = None, walltime: float = None,
+                   new_style: bool = False, double_precision: bool = False):
+        self._writer.add_scalar(tag, scalar_value, global_step, walltime, new_style, double_precision)
+
+    def add_scalars(self, main_tag: str, tag_scalar_dict: dict, global_step: int = None, walltime: float = None):
+        self._writer.add_scalars(main_tag, tag_scalar_dict, global_step, walltime)
+
+    def flush_writer(self):
+        self._writer.flush()
+
+    def close_writer(self):
+        self._writer.close()
 
     def make_log_files(self, training_config):
         with open(f"{self.experiment_dir}/description.txt", "w") as file1:
