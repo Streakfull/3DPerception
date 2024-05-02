@@ -35,16 +35,22 @@ dataset:
   is_overfit: true
 
   shape_net_vox:
-    class_filepath: datasets/shape_net/shape_net_vox.py
+    class_filepath: src/datasets/shape_net/shape_net_vox.py
     class: ShapeNetVox
     category: airplane
-    path: local_raw_dataset/ShapeNet/ShapeNetVox32
+    path: src/local_raw_dataset/ShapeNet/ShapeNetVox32
 
   shape_net_points:
-    class_filepath: datasets/shape_net/shape_net_points.py
+    class_filepath: src/datasets/shape_net/shape_net_points.py
     class: ShapeNetPoints
     category: airplane
-    path: local_raw_dataset/ShapeNet/ShapeNetPointClouds
+    path: src/local_raw_dataset/ShapeNet/ShapeNetPointClouds
+  
+  shape_net_v2_sdf:
+    class_filepath: src/datasets/shape_net_v2_sdf/shape_net_v2_sdf.py
+    class: ShapeNetV2SDF
+    category: airplane
+    path: src/local_raw_dataset/ShapeNet/ShapeNetCore.v2
 
 model:
   model_field: dummy_classifier

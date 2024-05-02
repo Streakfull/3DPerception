@@ -167,3 +167,5 @@ raw_dataset
 logs
 .vscode
 sandbox.ipynb
+tensorboard.ipynb
+testVisuals
