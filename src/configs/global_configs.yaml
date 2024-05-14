@@ -2,37 +2,37 @@
 # Add configurations as needed
 
 training:
-  name: dummy_classification
-  description: Initial overfitting Experiment on shape net
+  name: PR-Testing
+  description: Testing final PR
+  experiment_id: None   # None | A unique id identifying the experiment folder
   extra_notes: none
-  experiment_id: 12
   logs_dir: logs
   is_train: true
-  device: cuda:0
-  batch_size: 8
+  device: cpu
+  batch_size: 6
   num_workers: 1
-  test_size: 0.2
-  n_epochs: 20
-  append_loss_every: 1
-  print_every: 1
+  test_size: 0.1
+  n_epochs: 500
+  append_loss_every: 50
+  print_every: 1000
   #print_every: 10
-  validate_every: 5
-  save_every: 5
-  save_every_nepochs: 10
+  validate_every: 6000
+  save_every: 1700000000000000000000000000
+  save_every_nepochs: 4
   start_epoch: 0
   start_iteration: 0
-  visualize_every: 5
-  load_ckpt: False
-  ckpt_path: test_path
+  visualize_every: 500
+  load_ckpt: True
+  ckpt_path: src/logs/new-dataset-train/notebook/2024_05_08_04_08_18/checkpoints/epoch-128.ckpt
+  use_scheduler: False
 
 dataset:
-  dataset_field: shape_net_vox
-  path:
-    local_raw_dataset/ShapeNet/ShapeNetVox32 # For local testing without downloading shape => change to local_raw_dataset/ShapeNet
+  dataset_field: shape_net_v2_sdf
+  path: src/raw_dataset/ShapeNetV2/sdf_064  # For local testing without downloading shape => change to local_raw_dataset/ShapeNet
     # Can be overriden by dataset specific path
-  overfit_size: 64
+  overfit_size: 1
   split: train # train | valid | test
-  is_overfit: true
+  is_overfit: False
 
   shape_net_vox:
     class_filepath: src/datasets/shape_net/shape_net_vox.py
@@ -44,16 +44,28 @@ dataset:
     class_filepath: src/datasets/shape_net/shape_net_points.py
     class: ShapeNetPoints
     category: airplane
-    path: src/local_raw_dataset/ShapeNet/ShapeNetPointClouds
+    path: src/raw_dataset/ShapeNet/ShapeNetPointClouds
   
+  shape_net_sdf:
+    category: chair
+    path: src/raw_dataset/ShapeNetV2/sdf_064
+    class_filepath: datasets/shape_net/shape_net_sdf.py
+    class: ShapeNetSDF
+
   shape_net_v2_sdf:
-    class_filepath: src/datasets/shape_net_v2_sdf/shape_net_v2_sdf.py
+    class_filepath: src/datasets/shape_net/shape_net_v2_sdf.py
     class: ShapeNetV2SDF
-    category: airplane
-    path: src/local_raw_dataset/ShapeNet/ShapeNetCore.v2
+    category: chair
+    path: src/raw_dataset/ShapeNetCore.v2
+  
+  shape_net_v3_sdf:
+    class_filepath: src/datasets/shape_net/shape_net_v3_sdf.py
+    class: ShapeNetV3SDF
+    category: chair
+    path: src/raw_dataset/ShapeNetV3/SDF_v1
 
 model:
-  model_field: dummy_classifier
+  model_field: auto_encoder
   dummy_classifier:
     model_filepath: models/dummy_classifier.py
     model_class: DummyClassifier
@@ -64,6 +76,25 @@ model:
     dummy_network:
       kernel_size: 3
       padding: 1
+  
+  auto_encoder:
+    model_filepath: src/models/auto_encoder.py
+    model_class: AutoEncoder
+    lr: 0.0001
+    criterion: MSE
+    scheduler_step_size: 300
+    scheduler_gamma: 0.5
+    weight_init: None    #None | normal | xavier | xavier_uniform | kaiming | orthogonal
+    gain: 0.02 
+    auto_encoder_networks:
+      in_channels: 1
+      out_channels: 32
+      ch_mult: [1, 2, 2, 4]
+      num_res_blocks: 1
+      attn_resolutions: [8]
+      dropout: 0.0
+      resamp_with_conv: true
+      resolution: 64
 
 evaluation:
   ckpt_path: #Path of saved parameters

@@ -27,7 +27,8 @@ class BaseModel(torch.nn.Module):
 
         self.model_names = []
         self.epoch_labels = []
-        self.optimizers = []
+        self.optimizer = None
+        self.scheduler = None
 
     def set_input(self, input):
         self.input = input
@@ -46,15 +47,6 @@ class BaseModel(torch.nn.Module):
         cprint(f"{checkpoint_name} created", "blue")
         torch.save(self.state_dict(), checkpoint_name)
 
-    # def train(self):
-    #     pass
-
-    # def eval(self):
-    #     pass
-
-    #     def to(self, device):
-    #         pass
-
     def inference(self):
         pass
 
@@ -62,7 +54,11 @@ class BaseModel(torch.nn.Module):
         return 0
 
     def update_lr(self):
-        pass
+        if (self.scheduler is None):
+            return
+        self.scheduler.step()
+        lr = self.optimizer.param_groups[0]['lr']
+        cprint('[*] learning rate = %.7f' % lr, "yellow")
 
     def load_ckpt(self, ckpt_path):
         self.load_state_dict(torch.load(ckpt_path))
@@ -73,3 +69,9 @@ class BaseModel(torch.nn.Module):
             if isinstance(name, str):
                 var = getattr(self, name)
                 setattr(self, name, var.cuda(0, non_blocking=True))
+
+    def init_weights(self):
+        pass
+
+    def get_batch_input(self, x):
+        return x

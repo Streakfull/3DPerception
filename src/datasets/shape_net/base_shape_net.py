@@ -39,9 +39,12 @@ class BaseShapeNet(BaseDataSet):
         category_id = self.category_directory_mapping[self.cat]
         return self.get_category_shape_ids(category_id)
 
+    def get_shape_info(self, shape_key):
+        return shape_key.split("/")
+
     def __getitem__(self, index):
         shape_key = self.items[index]
-        shape_info = shape_key.split("/")
+        shape_info = self.get_shape_info(shape_key)
         class_name = self.class_name_mapping[shape_info[0]]
         class_index = self.classes.index(shape_info[0])
         return shape_key, class_index, class_name, shape_key
