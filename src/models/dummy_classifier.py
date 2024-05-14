@@ -1,4 +1,3 @@
-from typing import OrderedDict
 from src.models.base_model import BaseModel
 from src.blocks.dummy_network import DummyNetwork
 from src.losses.build_loss import BuildLoss

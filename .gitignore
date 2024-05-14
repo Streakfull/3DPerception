@@ -167,5 +167,9 @@ raw_dataset
 logs
 .vscode
 sandbox.ipynb
-tensorboard.ipynb
+*.obj
+testVisuals/*
 testVisuals
+tensorboard.ipynb
+*_local.ipynb
+nohup.out

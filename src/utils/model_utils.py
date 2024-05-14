@@ -2,11 +2,13 @@ from torch.nn import init
 import numpy as np
 
 
+
 def init_weights(net, init_type='normal', gain=0.01):
     def init_func(m):
         classname = m.__class__.__name__
         if classname.find('BatchNorm2d') != -1:
             if hasattr(m, 'weight') and m.weight is not None:
+
                 init.normal_(m.weight.data, 1.0, gain)
             if hasattr(m, 'bias') and m.bias is not None:
                 init.constant_(m.bias.data, 0.0)
@@ -36,6 +38,23 @@ def init_weights(net, init_type='normal', gain=0.01):
         m.apply(init_func)
 
 
+def get_model_size(model):
+    param_size = 0
+    total_params = 0
+    for param in model.parameters():
+        param_size += param.nelement() * param.element_size()
+        total_params += param.nelement()
+    buffer_size = 0
+    for buffer in model.buffers():
+        buffer_size += buffer.nelement() * buffer.element_size()
+    size_all_mb = (param_size + buffer_size) / 1024**2
+    size = 'Model size: {:.3f}MB'.format(size_all_mb)
+    params_count = 'Total_params: {:.3}M'.format(total_params/1e6)
+    print(size)
+    print(params_count)
+    return size, params_count
+
+
 def summarize_model(model):
     layers = [(name if len(name) > 0 else 'TOTAL', str(module.__class__.__name__),
                sum(np.prod(p.shape) for p in module.parameters())) for name, module in model.named_modules()]
@@ -56,7 +75,8 @@ def summarize_model(model):
     col_widths = []
     for c in columns:
         col_width = max(len(str(a)) for a in c[1]) if n_rows else 0
-        col_width = max(col_width, len(c[0]))  # minimum length is header length
+        # minimum length is header length
+        col_width = max(col_width, len(c[0]))
         col_widths.append(col_width)
 
     # Formatting
@@ -70,5 +90,7 @@ def summarize_model(model):
         for c, l in zip(columns, col_widths):
             line.append(s.format(str(c[1][i]), l))
         summary += "\n" + " | ".join(line)
-
+    model_size, total_params = get_model_size(model)
+    summary += "\n" + "\n" + model_size
+    summary += "\n" + total_params
     return summary

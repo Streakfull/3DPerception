@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from sklearn.model_selection import train_test_split
+from src.datasets.base_dataset import BaseDataSet
 from torch.utils.data import DataLoader, Subset
 
 from src.training.ModuleLoader import load_module_from_path
@@ -14,10 +15,11 @@ class DataLoaderHandler:
         local_dataset_config = global_dataset_config[dataset_field]
         self.dataset_type = load_module_from_path(filepath=Path(local_dataset_config["class_filepath"]),
                                                   class_name=local_dataset_config["class"])
-        dataset = self.dataset_type(global_dataset_config, local_dataset_config)
-        print('length: ', len(dataset))
+        self.dataset = self.dataset_type(
+            global_dataset_config, local_dataset_config)
+        print('length: ', len(self.dataset))
 
-        train_ds, valid_ds = self.train_val_dataset(dataset, test_size)
+        train_ds, valid_ds = self.train_val_dataset(self.dataset, test_size)
 
         self.train_dataloader = DataLoader(
             train_ds,
@@ -37,7 +39,10 @@ class DataLoaderHandler:
 
     @staticmethod
     def train_val_dataset(dataset, test_size):
-        train_idx, val_idx = train_test_split(list(range(len(dataset))), test_size=test_size)
+        if (len(dataset) == 1):
+            return dataset, dataset
+        train_idx, val_idx = train_test_split(
+            list(range(len(dataset))), test_size=test_size)
 
         train_ds = Subset(dataset, train_idx)
         val_ds = Subset(dataset, val_idx)
@@ -45,3 +50,6 @@ class DataLoaderHandler:
 
     def get_dataloaders(self):
         return self.train_dataloader, self.validation_dataloader
+
+    def get_dataset(self):
+        return self.dataset

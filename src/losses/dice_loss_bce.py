@@ -10,7 +10,8 @@ class DiceLossBCE(nn.Module):
         self.smooth = smooth
         self.dice = DiceLoss()
         if (pos_weight != None):
-            self.cross_entropy = nn.BCEWithLogitsLoss(reduction=reduction, pos_weight=torch.tensor(pos_weight))
+            self.cross_entropy = nn.BCEWithLogitsLoss(
+                reduction=reduction, pos_weight=torch.tensor(pos_weight))
         else:
             self.cross_entropy = nn.BCEWithLogitsLoss(reduction=reduction)
 

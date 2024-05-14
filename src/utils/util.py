@@ -1,6 +1,5 @@
 import os
 import random
-
 import numpy as np
 import torch
 from PIL import Image
@@ -64,3 +63,7 @@ def seed_all(seed):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = True
+
+
+def to_point_list(s):
+    return np.concatenate([c[:, np.newaxis] for c in np.where(s)], axis=1)

@@ -1,10 +1,20 @@
-import io
 
-import k3d
-import matplotlib.pyplot as plt
-import numpy as np
-from PIL import Image
+import os  # nopep8
+os.environ["PYOPENGL_PLATFORM"] = "egl"  # nopep8
+
+import mcubes as mc
+from src.utils.util import to_point_list
+import trimesh.scene
+from matplotlib import cm, colors
+import trimesh
+from pathlib import Path
 from torch.nn import Sigmoid
+from PIL import Image
+import numpy as np
+import matplotlib.pyplot as plt
+import k3d
+import io
+from IPython.display import Image as ImageDisplay
 
 
 def visualize_occupancy(occupancy_grid, flip_axes=False):
@@ -43,7 +53,8 @@ def save_voxels(pred, gt, save_path, iteration, is_train=True):
     title = "train"
     if (not is_train):
         title = "validation"
-    fig = visualize_png(gt_plots + pred_plots, f"{title}/Target-Reconstruction", rows=2)
+    fig = visualize_png(gt_plots + pred_plots,
+                        f"{title}/Target-Reconstruction", rows=2)
     final_save_path = f"{save_path}/{title}_{int(iteration)}"
     print(final_save_path, "saved")
     fig.savefig(final_save_path)
@@ -132,3 +143,91 @@ def visualize_png2(images, title, rows=5):
         ax.axison = False
     plt.show()
     return fig
+
+
+def visualize_sdf(sdf: np.array, filename: Path) -> None:
+    assert sdf.shape[0] == sdf.shape[1] == sdf.shape[2], "SDF grid has to be of cubic shape"
+    print(f"Creating SDF visualization for {sdf.shape[0]}^3 grid ...")
+
+    voxels = np.stack(np.meshgrid(range(sdf.shape[0]), range(
+        sdf.shape[1]), range(sdf.shape[2]))).reshape(3, -1).T
+
+    sdf[sdf < 0] /= np.abs(sdf[sdf < 0]).max() if np.sum(sdf < 0) > 0 else 1.
+    sdf[sdf > 0] /= sdf[sdf > 0].max() if np.sum(sdf < 0) > 0 else 1.
+    sdf /= -2.
+
+    corners = np.array([
+        [-.25, -.25, -.25],
+        [.25, -.25, -.25],
+        [-.25, .25, -.25],
+        [.25, .25, -.25],
+        [-.25, -.25, .25],
+        [.25, -.25, .25],
+        [-.25, .25, .25],
+        [.25, .25, .25]
+    ])[np.newaxis, :].repeat(voxels.shape[0], axis=0).reshape(-1, 3)
+
+    scale_factors = sdf[tuple(voxels.T)].repeat(8, axis=0)
+    cube_vertices = voxels.repeat(
+        8, axis=0) + corners * scale_factors[:, np.newaxis]
+    cube_vertex_colors = cm.get_cmap('seismic')(
+        colors.Normalize(vmin=-1, vmax=1)(scale_factors))[:, :3]
+
+    faces = np.array([
+        [1, 0, 2], [2, 3, 1], [5, 1, 3], [3, 7, 5], [4, 5, 7], [7, 6, 4],
+        [0, 4, 6], [6, 2, 0], [3, 2, 6], [6, 7, 3], [5, 4, 0], [0, 1, 5]
+    ])[np.newaxis, :].repeat(voxels.shape[0], axis=0).reshape(-1, 3)
+    cube_faces = faces + (np.arange(0, voxels.shape[0]) * 8)[
+        np.newaxis, :].repeat(12, axis=0).T.flatten()[:, np.newaxis]
+
+    mesh = trimesh.Trimesh(vertices=cube_vertices, faces=cube_faces,
+                           vertex_colors=cube_vertex_colors, process=False)
+    img = visualize_mesh(cube_vertices, cube_faces, flip_axes=True)
+    mesh.export(str(filename))
+    print(f"Exported to {filename}")
+
+
+def visualize_mesh(vertices, faces, flip_axes=False):
+    plot = k3d.plot(name='points', grid_visible=False,
+                    grid=(-0.55, -0.55, -0.55, 0.55, 0.55, 0.55))
+
+    # vertices[:, 2] = vertices[:, 2] * -1
+    # vertices[:, [0, 1, 2]] = vertices[:, [0, 2, 1]]
+    if flip_axes:
+        # vertices[:, 2] = vertices[:, 2] * -1
+        vertices[:, [0, 1, 2]] = vertices[:, [2, 0, 1]]
+       # vertices[:, 1] = vertices[:, 1] * -1
+        # vertices[:, [0, 1, 2]] = vertices[:, [1, 0, 2]]
+
+    plt_mesh = k3d.mesh(vertices.astype(np.float32),
+                        faces.astype(np.uint32), color=0xd0d0d0)
+
+    plot += plt_mesh
+    plt_mesh.shader = '3d'
+
+    plot.display()
+
+
+def visualize_mesh_file(filePath, flip_axes=False):
+    mesh = trimesh.load_mesh(filePath)
+    vertices = mesh.vertices
+    faces = mesh.faces
+    visualize_mesh(vertices, faces, flip_axes=flip_axes)
+    print(vertices.shape)
+    print(mesh)
+
+
+def visualize_sdf_as_voxels(sdf, output_path, level=0.5):
+    point_list = to_point_list(sdf <= level)
+    if point_list.shape[0] > 0:
+        base_mesh = trimesh.voxel.ops.multibox(centers=point_list, pitch=1)
+        base_mesh.export(output_path)
+
+
+def visualize_sdf_as_mesh(sdf, output_path, level=0.75, scale_factor=1, saveMesh=False):
+    vertices, triangles = mc.marching_cubes(sdf, level)
+    vertices = vertices / scale_factor
+    if (saveMesh):
+        mc.export_obj(vertices, triangles, output_path)
+
+    visualize_mesh(vertices, triangles, flip_axes=True)

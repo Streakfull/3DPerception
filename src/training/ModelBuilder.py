@@ -22,10 +22,9 @@ class ModelBuilder:
         self.load_model_ckpt()
 
     def model_to_device(self):
-        if torch.cuda.is_available():
-            torch.cuda.mem_get_info()
         device = self.training_config["device"]
-        if "cpu" == device:
+        if "cpu" == device or not torch.cuda.is_available():
+            device = "cpu"
             cprint.warn('Using CPU')
         else:
             cprint.ok('Using device:', device)

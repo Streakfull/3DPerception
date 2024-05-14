@@ -19,4 +19,8 @@ class BuildLoss:
 
             case "CE":
                 return nn.CrossEntropyLoss()
+
+            case "MSE":
+                return nn.MSELoss()
+
         return nn.CrossEntropyLoss()

@@ -14,3 +14,5 @@ scikit-learn==1.4.2
 numpy~=1.26.4
 PyYAML~=6.0.1
 tqdm~=4.66.2
+pyrender
+torchinfo==1.8.0
