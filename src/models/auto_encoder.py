@@ -22,6 +22,7 @@ class AutoEncoder(BaseModel):
         if (init_type != "None"):
             print("Initializing model weights with %s initialization" % init_type)
             self.init_weights()
+        self.set_metrics()
 
     def forward(self, x):
         self.target = x
@@ -44,8 +45,14 @@ class AutoEncoder(BaseModel):
         self.backward()
         self.optimizer.step()
 
-    def get_metrics(self):
-        return {'loss': self.loss.data}
+    def get_metrics(self, apply_additional_metrics=False):
+        if (not apply_additional_metrics):
+            return {'loss': self.loss.data}
+        metrics = {'loss': self.loss.data}
+        for metric in self.metrics:
+            value = metric[1].calc_batch(self.predictions, self.target)
+            metrics[metric[0]] = value
+        return metrics
 
     def inference(self, x):
         self.eval()
