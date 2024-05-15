@@ -1,6 +1,7 @@
 import os
 from termcolor import cprint
 import torch
+from src.metrics.metrics_builder import Metrics
 
 
 # modified from https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix
@@ -25,10 +26,10 @@ class BaseModel(torch.nn.Module):
                 os.makedirs(self.save_dir)
                 cprint(f"{self.save_dir} created", "blue")
 
-        self.model_names = []
         self.epoch_labels = []
         self.optimizer = None
         self.scheduler = None
+        self.metrics = []
 
     def set_input(self, input):
         self.input = input
@@ -75,3 +76,16 @@ class BaseModel(torch.nn.Module):
 
     def get_batch_input(self, x):
         return x
+
+    def set_metrics(self):
+        self.model_names = []
+        metrics_config = self.configs["metrics"]
+        if (metrics_config == "None"):
+            return
+        self.metrics = Metrics(metrics_config).get_metrics()
+
+    def get_additional_metrics(self):
+        metrics_config = self.configs["metrics"]
+        if (metrics_config == "None"):
+            return []
+        return metrics_config.split(",")

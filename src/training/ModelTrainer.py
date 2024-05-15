@@ -94,6 +94,7 @@ class ModelTrainer:
                 self.model.eval()
                 val_loss_running = 0.
                 index_batch = 0
+                metrics_dict = self._init_metrics_dict()
                 for _, batch_val in self.tqdm(enumerate(self.validation_dataloader), total=len(
                         self.validation_dataloader)):
                     with torch.no_grad():
@@ -102,10 +103,18 @@ class ModelTrainer:
                         self.model.inference(
                             self.model.get_batch_input(batch_val))
                         self.model.set_loss()
-                        val_loss = self.model.get_metrics().get("loss")
+                        metrics = self.model.get_metrics(
+                            apply_additional_metrics=True)
+                        val_loss = metrics.get("loss")
                         val_loss_running += val_loss
+                        for key in metrics.keys():
+                            if (key == "loss"):
+                                continue
+                            metrics_dict[key] += metrics.get(key)
                         index_batch += 1
                 avg_loss_val = val_loss_running / index_batch
+                for key in metrics_dict.keys():
+                    metrics_dict[key] = metrics_dict[key] / index_batch
 
                 # Do visualizations here
                 if avg_loss_val < self.train_vars.best_loss_val:
@@ -122,6 +131,9 @@ class ModelTrainer:
                                         {'Training':  self.train_vars.last_loss,
                                             'Validation': avg_loss_val},
                                         iteration)
+                for key in metrics_dict.keys():
+                    self.logger.add_scalar(
+                        f"Validation/{key}", metrics_dict[key], iteration)
                 self.logger.flush_writer()
 
     def _set_device(self):
@@ -131,6 +143,12 @@ class ModelTrainer:
             cprint.ok('Using device:', self.training_config['device'])
         else:
             cprint.warn('Using CPU')
+
+    def _init_metrics_dict(self):
+        metrics_dict = {}
+        for metric_key in self.model.get_additional_metrics():
+            metrics_dict[metric_key] = 0.0
+        return metrics_dict
 
     def train(self):
         start_epoch = self.training_config["start_epoch"]

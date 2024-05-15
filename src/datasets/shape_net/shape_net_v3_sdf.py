@@ -3,8 +3,6 @@ import numpy as np
 from src.datasets.shape_net.base_shape_net import BaseShapeNet
 import h5py
 
-from src.utils.binvox_rw import read_as_3d_array
-
 
 class ShapeNetV3SDF(BaseShapeNet):
     def __init__(self, dataset_options, shape_net_options, cat=None):
