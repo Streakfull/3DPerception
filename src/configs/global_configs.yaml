@@ -2,9 +2,9 @@
 # Add configurations as needed
 
 training:
-  name: metrics
-  description: Metrics testing tensor board
-  experiment_id: tbTesting   # None | A unique id identifying the experiment folder
+  name: vaeDev
+  description: DevVae
+  experiment_id: None  # None | A unique id identifying the experiment folder
   extra_notes: none
   logs_dir: logs
   is_train: true
@@ -65,7 +65,7 @@ dataset:
     path: src/raw_dataset/ShapeNetDISN/SDF_v1_64
 
 model:
-  model_field: auto_encoder
+  model_field: vae
 
   dummy_classifier:
     model_filepath: models/dummy_classifier.py
@@ -91,6 +91,30 @@ model:
     auto_encoder_networks:
       in_channels: 1
       out_channels: 64
+      ch_mult: [1, 2, 2, 4]
+      num_res_blocks: 1
+      attn_resolutions: [8]
+      dropout: 0.0
+      resamp_with_conv: true
+      resolution: 64
+  
+  vae:
+    model_filepath: src/models/vae.py
+    model_class: VAE
+    metrics: iou,chamferDistance   # None | iou | chamferDistance
+    lr: 0.0001
+    criterion: MSE
+    kl_weight: 0.5
+    reconst_weight: 0.5
+    scheduler_step_size: 300
+    scheduler_gamma: 0.5
+    latent_space_size: 1024
+    weight_init: None    #None | normal | xavier | xavier_uniform | kaiming | orthogonal
+    gain: 0.02
+    encoder_out: 512
+    auto_encoder_networks:
+      in_channels: 1
+      out_channels: 1
       ch_mult: [1, 2, 2, 4]
       num_res_blocks: 1
       attn_resolutions: [8]
