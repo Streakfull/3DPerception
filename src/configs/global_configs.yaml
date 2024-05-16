@@ -4,7 +4,7 @@
 training:
   name: vaeTrain
   description: Encoder 32 channels reconstruction only
-  experiment_id: 4ChannelSizeFullDecoder  # None | A unique id identifying the experiment folder
+  experiment_id: largeLatentSpace  # None | A unique id identifying the experiment folder
   extra_notes: none
   logs_dir: logs
   is_train: true
@@ -113,7 +113,6 @@ model:
     latent_space_size: 2048
     weight_init: xavier_uniform    #None | normal | xavier | xavier_uniform | kaiming | orthogonal
     gain: 0.02
-    encoder_out: 512
     auto_encoder_networks:
       in_channels: 1
       out_channels: 32

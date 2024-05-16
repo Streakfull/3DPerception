@@ -11,43 +11,32 @@ class VAE(AutoEncoder):
         super().__init__(configs)
         self.kl_weight = configs['kl_weight']
         self.reconst_weight = configs['reconst_weight']
-        # self.mu_linear = nn.Linear(
-        #     in_features=configs['encoder_out'], out_features=configs["latent_space_size"])
-
-        # self.batch_norm_mu = nn.BatchNorm1d(
-        #     num_features=configs["latent_space_size"])
-        # self.logvar_linear = nn.Linear(
-        #     in_features=configs['encoder_out'], out_features=configs["latent_space_size"])
-        # self.batch_norm_logvar = nn.BatchNorm1d(
-        #     num_features=configs["latent_space_size"])
-        # self.decode_linear = nn.Linear(
-        #     in_features=configs["latent_space_size"],
-        #     out_features=configs['encoder_out'])
-
+        self.encoder_channels = configs["auto_encoder_networks"]["out_channels"]
         self.conv_mu = nn.Conv3d(
-            in_channels=32, out_channels=32, kernel_size=3, padding=1)
-        self.conv_logvar = nn.Conv3d(
-            in_channels=32, out_channels=32, kernel_size=3, padding=1)
+            in_channels=self.encoder_channels, out_channels=self.encoder_channels, kernel_size=3, padding=1)
+        if (self.is_vae):
+            self.conv_logvar = nn.Conv3d(
+                in_channels=self.encoder_channels, out_channels=self.encoder_channels, kernel_size=3, padding=1)
 
         self.kl = KLDivergence()
 
-        # self.decode_conv = nn.Conv3d(
-        #     in_channels=4, out_channels=64, kernel_size=1)
+    @property
+    def is_vae(self):
+        return self.kl_weight > 0
 
     def forward(self, x):
         self.target = x
         x = self.encoder(x)
 
         self.mu = self.conv_mu(x)
-        self.logvar = self.conv_logvar(x)
-        self.mu = rearrange(self.mu, 'b ch w h l -> b (ch w h l)')
-        self.logvar = rearrange(self.logvar, 'b ch w h l -> b (ch w h l)')
-        z = self._reparameterize(self.mu, self.logvar)
-
-        # z = self.decode_linear(z)
-        z = rearrange(z, 'b (ch w h l) -> b ch w h l', ch=4, w=8, h=8, l=8)
-
-        # z = self.decode_conv(z)
+        if (self.is_vae):
+            self.logvar = self.conv_logvar(x)
+            self.mu = rearrange(self.mu, 'b ch w h l -> b (ch w h l)')
+            self.logvar = rearrange(self.logvar, 'b ch w h l -> b (ch w h l)')
+            z = self._reparameterize(self.mu, self.logvar)
+            z = rearrange(z, 'b (ch w h l) -> b ch w h l', ch=4, w=8, h=8, l=8)
+        else:
+            z = self.mu
         out = self.decoder(z)
         self.predictions = out
         return out
