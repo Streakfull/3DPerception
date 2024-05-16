@@ -99,6 +99,10 @@ class ModelTrainer:
                 val_loss_running = 0.
                 index_batch = 0
                 metrics_dict = self._init_metrics_dict()
+                additional_metrics = not intial_pass and iteration % self.training_config['apply_metrics_every'] == (
+                    self.training_config['apply_metrics_every'] - 1)
+                if (additional_metrics):
+                    print("Applying Additional metrics")
                 for _, batch_val in self.tqdm(enumerate(self.validation_dataloader), total=len(
                         self.validation_dataloader)):
                     with torch.no_grad():

@@ -81,6 +81,7 @@ class BaseModel(torch.nn.Module):
         self.model_names = []
         metrics_config = self.configs["metrics"]
         if (metrics_config == "None"):
+            self.metrics = []
             return
         self.metrics = Metrics(metrics_config).get_metrics()
 
