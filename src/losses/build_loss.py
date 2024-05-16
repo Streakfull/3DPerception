@@ -1,5 +1,6 @@
 from torch import nn
 from src.losses.dice_loss import DiceLoss
+from src.losses.KL_divergence import KLDivergence
 import torch
 
 
@@ -22,5 +23,8 @@ class BuildLoss:
 
             case "MSE":
                 return nn.MSELoss()
+
+            case "KL":
+                return KLDivergence()
 
         return nn.CrossEntropyLoss()
