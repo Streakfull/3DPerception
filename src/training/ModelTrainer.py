@@ -98,31 +98,43 @@ class ModelTrainer:
                 self.model.eval()
                 val_loss_running = 0.
                 index_batch = 0
-                metrics_dict = self._init_metrics_dict()
-                additional_metrics = not intial_pass and iteration % self.training_config['apply_metrics_every'] == (
-                    self.training_config['apply_metrics_every'] - 1)
-                if (additional_metrics):
-                    print("Applying Additional metrics")
-                for _, batch_val in self.tqdm(enumerate(self.validation_dataloader), total=len(
+                losses_dict = self._init_metrics_dict(
+                    self.model.get_additional_losses())
+                additional_metrics_dict = self._init_train_loss_dict(
+                    self.model.get_additional_metrics()
+                )
+                metric_batch_indices = np.random.randint(len(
+                    self.valdation_dataloader), size=self.training_config["apply_metrics_batch_count"])
+                for batch_index, batch_val in self.tqdm(enumerate(self.validation_dataloader), total=len(
                         self.validation_dataloader)):
                     with torch.no_grad():
+                        apply_additional_metrics = batch_index in metric_batch_indices
                         self.dataset_type.move_batch_to_device(
                             batch_val, self.device)
                         self.model.inference(
                             self.model.get_batch_input(batch_val))
                         self.model.set_loss()
-                        metrics = self.model.get_metrics(
-                            apply_additional_metrics=True)
+                        metrics = self.model.get_metrics()
                         val_loss = metrics.get("loss")
                         val_loss_running += val_loss
                         for key in metrics.keys():
                             if (key == "loss"):
                                 continue
-                            metrics_dict[key] += metrics.get(key)
+                            losses_dict[key] += metrics.get(key)
+                        if (apply_additional_metrics):
+                            cprint("Calculating additional metrics", "blue")
+                            additional_metrics = self.model.calculate_additional_metrics()
+                            for key in additional_metrics.keys():
+                                additional_metrics_dict[key] += additional_metrics_dict.get(
+                                    key)
                         index_batch += 1
                 avg_loss_val = val_loss_running / index_batch
-                for key in metrics_dict.keys():
-                    metrics_dict[key] = metrics_dict[key] / index_batch
+                for key in losses_dict.keys():
+                    losses_dict[key] = losses_dict[key] / index_batch
+
+                for key in additional_metrics_dict.keys():
+                    additional_metrics_dict[key] = additional_metrics_dict[key] / \
+                        metric_batch_indices.shape[0]
 
                 # Do visualizations here
                 if avg_loss_val < self.train_vars.best_loss_val:
@@ -139,9 +151,14 @@ class ModelTrainer:
                                         {'Training':  self.train_vars.last_loss["loss"],
                                             'Validation': avg_loss_val},
                                         iteration)
-                for key in metrics_dict.keys():
+                for key in losses_dict.keys():
                     self.logger.add_scalar(
-                        f"Validation/{key}", metrics_dict[key], iteration)
+                        f"Validation/{key}", losses_dict[key], iteration)
+
+                for key in additional_metrics_dict.keys():
+                    self.logger.add_scalar(
+                        f"Validation/{key}", additional_metrics_dict[key], iteration)
+
                 self.logger.flush_writer()
 
     def train(self):
@@ -184,9 +201,9 @@ class ModelTrainer:
         else:
             cprint.warn('Using CPU')
 
-    def _init_metrics_dict(self):
+    def _init_metrics_dict(self, keys):
         metrics_dict = {}
-        for metric_key in self.model.get_additional_metrics():
+        for metric_key in keys:
             metrics_dict[metric_key] = 0.0
         return metrics_dict
 

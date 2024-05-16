@@ -90,3 +90,13 @@ class BaseModel(torch.nn.Module):
         if (metrics_config == "None"):
             return []
         return metrics_config.split(",")
+
+    def get_additional_losses(self):
+        losses_config = self.configs["losses"]
+        if (losses_config == "None"):
+            return []
+        return losses_config.split(",")
+
+    def calculate_additional_metrics(self):
+        metrics = {}
+        return metrics

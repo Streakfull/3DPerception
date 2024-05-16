@@ -24,14 +24,20 @@ class VAE(AutoEncoder):
             in_features=configs["latent_space_size"],
             out_features=configs['encoder_out'])
 
+        self.conv_mu = nn.Conv3d(in_channels=64, out_channels=2, kernel_size=1)
+        self.conv_logvar = nn.Conv3d(
+            in_channels=64, out_channels=2, kernel_size=1)
+
         self.kl = KLDivergence()
 
     def forward(self, x):
         self.target = x
         x = self.encoder(x)
-        x = rearrange(x, 'b ch w h l -> b (ch w h l)')
-        self.mu = self.mu_linear(x)
-        self.logvar = self.logvar_linear(x)
+
+        self.mu = self.conv_mu(x)
+        self.logvar = self.conv_logvar(x)
+        self.mu = rearrange(self.mu, 'b ch w h l -> b (ch w h l)')
+        self.logvar = rearrange(self.logvar, 'b ch w h l -> b (ch w h l)')
         z = self._reparameterize(self.mu, self.logvar)
         z = self.decode_linear(z)
         z = rearrange(z, 'b (ch w h l) -> b ch w h l', ch=1, w=8, h=8, l=8)
@@ -50,10 +56,11 @@ class VAE(AutoEncoder):
         self.kl_loss = self.kl_weight * self.kl(self.mu, self.logvar)
         self.loss = self.reconst_loss + self.kl_loss
 
-    def get_metrics(self, apply_additional_metrics=False):
-        if (not apply_additional_metrics):
-            return {'loss': self.loss.data, 'l2': self.reconst_loss.data, 'kl': self.kl_loss.data}
-        metrics = {'loss': self.loss.data}
+    def get_metrics(self):
+        return {'loss': self.loss.data, 'l2': self.reconst_loss.data / self.reconst_weight, 'kl': self.kl_loss.data / self.kl_weight}
+
+    def calculate_additional_metrics(self):
+        metrics = {}
         for metric in self.metrics:
             value = metric[1].calc_batch(self.predictions, self.target)
             metrics[metric[0]] = value
@@ -67,11 +74,11 @@ class VAE(AutoEncoder):
         init_weights(self.logvar_linear, init_type=init_type, gain=gain)
         init_weights(self.decode_linear, init_type=init_type, gain=gain)
 
-    def sample(self, n_samples=1):
+    def sample(self, n_samples=1, deivce="cuda:0"):
         self.eval()
         with torch.no_grad():
             z = torch.randn(
-                size=(n_samples, self.configs["latent_space_size"]))
+                size=(n_samples, self.configs["latent_space_size"])).to(device=deivce)
             z = self.decode_linear(z)
             z = rearrange(z, 'b (ch w h l) -> b ch w h l', ch=1, w=8, h=8, l=8)
             out = self.decoder(z)
