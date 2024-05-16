@@ -50,6 +50,12 @@ class ModelTrainer:
         train_loss_running = self._init_train_loss_dict()
         batch_iteration = 0
         self.logger.start_new_epoch(epoch)
+        additional_metrics_dict_train = self._init_metrics_dict(
+            self.model.get_additional_metrics()
+        )
+        metric_batch_indices = np.random.randint(len(
+            self.train_dataloader), size=self.training_config["apply_metrics_batch_count"])
+
         for batch_idx, batch in self.tqdm(enumerate(self.train_dataloader), total=len(self.train_dataloader)):
             iteration = epoch * len(self.train_dataloader) + batch_idx
             if iteration < self.train_vars.start_iteration:
@@ -61,6 +67,17 @@ class ModelTrainer:
             train_loss_running["loss"] += loss
             self._add_losses_to_dict(train_loss_running)
             batch_iteration += 1
+
+            if (batch_idx in metric_batch_indices):
+                cprint.ok(
+                    f"Calculating additional metrics for training batch {batch_idx}")
+                additional_metrics = self.model.calculate_additional_metrics()
+                for key in additional_metrics.keys():
+                    additional_metrics_dict_train[key] = additional_metrics.get(
+                        key)
+                    for key in additional_metrics_dict_train.keys():
+                        self.logger.add_scalar(
+                            f"Train/{key}", additional_metrics_dict_train[key], iteration)
             # log loss
             self.logger.log_loss(epoch, iteration, loss)
 
@@ -100,11 +117,11 @@ class ModelTrainer:
                 index_batch = 0
                 losses_dict = self._init_metrics_dict(
                     self.model.get_additional_losses())
-                additional_metrics_dict = self._init_train_loss_dict(
+                additional_metrics_dict = self._init_metrics_dict(
                     self.model.get_additional_metrics()
                 )
                 metric_batch_indices = np.random.randint(len(
-                    self.valdation_dataloader), size=self.training_config["apply_metrics_batch_count"])
+                    self.validation_dataloader), size=self.training_config["apply_metrics_batch_count"])
                 for batch_index, batch_val in self.tqdm(enumerate(self.validation_dataloader), total=len(
                         self.validation_dataloader)):
                     with torch.no_grad():
@@ -122,10 +139,11 @@ class ModelTrainer:
                                 continue
                             losses_dict[key] += metrics.get(key)
                         if (apply_additional_metrics):
-                            cprint("Calculating additional metrics", "blue")
+                            cprint.ok(
+                                f"Calculating additional metrics for batch {batch_index}")
                             additional_metrics = self.model.calculate_additional_metrics()
                             for key in additional_metrics.keys():
-                                additional_metrics_dict[key] += additional_metrics_dict.get(
+                                additional_metrics_dict[key] += additional_metrics.get(
                                     key)
                         index_batch += 1
                 avg_loss_val = val_loss_running / index_batch

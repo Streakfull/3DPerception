@@ -19,6 +19,12 @@ class ModelBuilder:
                                            class_name=model_class)
         self.model = model_type(self.picked_model_config)
         self.model_to_device()
+
+        weight_inits_type = self.picked_model_config["weight_init"]
+        if (weight_inits_type != "None"):
+            cprint.ok("Initializing model weights with %s initialization" %
+                      weight_inits_type)
+            self.model.init_weights()
         self.load_model_ckpt()
 
     def model_to_device(self):
