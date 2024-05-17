@@ -34,9 +34,11 @@ class VAE(AutoEncoder):
             self.mu = rearrange(self.mu, 'b ch w h l -> b (ch w h l)')
             self.logvar = rearrange(self.logvar, 'b ch w h l -> b (ch w h l)')
             z = self._reparameterize(self.mu, self.logvar)
-            z = rearrange(z, 'b (ch w h l) -> b ch w h l', ch=4, w=8, h=8, l=8)
+            z = rearrange(z, 'b (ch w h l) -> b ch w h l',
+                          ch=self.encoder_channels, w=8, h=8, l=8)
         else:
             z = self.mu
+
         out = self.decoder(z)
         self.predictions = out
         return out
@@ -48,7 +50,10 @@ class VAE(AutoEncoder):
 
     def set_loss(self):
         self.reconst_loss = self.criterion(self.predictions, self.target)
-        self.kl_loss = self.kl(self.mu, self.logvar)
+        if (self.is_vae):
+            self.kl_loss = self.kl(self.mu, self.logvar)
+        else:
+            self.kl_loss = torch.tensor(0.0)
         self.loss = (self.reconst_weight*self.reconst_loss) + \
             (self.kl_weight*self.kl_loss)
 
@@ -67,19 +72,21 @@ class VAE(AutoEncoder):
         init_type = self.configs['weight_init']
         gain = self.configs['gain']
         init_weights(self.conv_mu, init_type=init_type, gain=gain)
-        init_weights(self.conv_logvar, init_type=init_type, gain=gain)
+        if (self.is_vae):
+            init_weights(self.conv_logvar, init_type=init_type, gain=gain)
         # init_type(self.decode_conv, init_type=init_type, gain=gain)
         # init_weights(self.mu_linear, init_type=init_type, gain=gain)
         # init_weights(self.logvar_linear, init_type=init_type, gain=gain)
         # init_weights(self.decode_linear, init_type=init_type, gain=gain)
 
-    def sample(self, n_samples=1, deivce="cuda:0"):
+    def sample(self, n_samples=1, device="cuda:0"):
         self.eval()
         with torch.no_grad():
             z = torch.randn(
-                size=(n_samples, self.configs["latent_space_size"])).to(device=deivce)
+                size=(n_samples, self.configs["latent_space_size"])).to(device=device)
            # z = self.decode_linear(z)
-            z = rearrange(z, 'b (ch w h l) -> b ch w h l', ch=4, w=8, h=8, l=8)
+            z = rearrange(z, 'b (ch w h l) -> b ch w h l',
+                          ch=32, w=8, h=8, l=8)
            # z = self.decode_conv(z)
             out = self.decoder(z)
             return out
