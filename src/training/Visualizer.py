@@ -6,10 +6,11 @@ from src.utils.util import mkdir
 
 class Visualizer:
 
-    def __init__(self, device, output_path):
+    def __init__(self, device, output_path, logger):
         self.output_path = output_path
         self.device = device
         self.directories_created = False
+        self.logger = logger
 
     def visualize(self, sdf_visuals_dict, epoch, iteration):
         cprint("Running Visualizations", "blue")
@@ -18,7 +19,7 @@ class Visualizer:
             if not self.directories_created:
                 mkdir(f"{self.output_path}/{key}")
             vis = SDFVisualizer(device=self.device, output_path=self.output_path,
-                                key=key, epoch=epoch, iteration=iteration)
+                                key=key, epoch=epoch, iteration=iteration, logger=self.logger)
             vis.visualize(sdf)
 
         self.directories_created = True

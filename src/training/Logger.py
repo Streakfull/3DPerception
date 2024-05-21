@@ -91,3 +91,7 @@ class Logger:
                 "%Y_%m_%d_%H_%M_%S")
         return Path(logs_dir) / config['name'] / experiment_id / datetime.now().strftime(
             "%Y_%m_%d_%H_%M_%S")
+
+    def log_image(self, tag, img, iteration):
+        self._writer.add_image(tag=tag, img_tensor=img,
+                               global_step=iteration, dataformats='HWC')
