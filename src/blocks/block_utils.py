@@ -10,10 +10,15 @@ def Normalize(in_channels):
     Returns:
       GroupNorm: Correct GroupNorm Class
     """
+
     if in_channels <= 32:
         num_groups = max(min(1, in_channels // 4), 1)
     else:
-        num_groups = 32
+        div = in_channels % 32
+        if (div == 0):
+            num_groups = 32
+        else:
+            num_groups = max(min(1, in_channels // 4), 1)
 
     return torch.nn.GroupNorm(num_groups=num_groups, num_channels=in_channels, eps=1e-6, affine=True)
 

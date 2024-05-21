@@ -1,5 +1,6 @@
 from src.metrics.chamfer_dist import ChamferDistance
 from src.metrics.iou import Iou
+from src.metrics.signed_iou import SignedIou
 
 
 class Metrics():
@@ -15,6 +16,8 @@ class Metrics():
                 case "chamferDistance":
                     self.metrics.append(
                         ("chamferDistance", ChamferDistance(apply_center=True)))
+                case "signedIou":
+                    self.metrics.append(("signedIou", SignedIou))
                 case _:
                     raise Exception("Metric not supported")
         return self.metrics

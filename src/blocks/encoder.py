@@ -62,7 +62,8 @@ class Encoder(nn.Module):
 
         self.norm_out = Normalize(block_in)
         self.conv_out = torch.nn.Conv3d(block_in,
-                                        out_channels=self.out_channels,
+                                        #out_channels=self.out_channels,
+                                        out_channels=64,
                                         kernel_size=3,
                                         stride=1,
                                         padding=1)

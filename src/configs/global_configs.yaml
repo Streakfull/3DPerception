@@ -2,28 +2,40 @@
 # Add configurations as needed
 
 training:
-  name: vaeTrain
-  description: 32*8^3 Latent Space with KL divergence
-  experiment_id: fullyConvKL_Weight_1e-3_continue_epoch_45 # None | A unique id identifying the experiment folder
+  name: VaeTry2
+  #name: dev
+  description: KL Scheduler
+  experiment_id: 16*8*8*8**Train # None | A unique id identifying the experiment folder
+  #experiment_id: None
   extra_notes: none
   logs_dir: logs
   is_train: true
   device: cuda:0
-  batch_size: 6
+  batch_size: 8
   num_workers: 1
   test_size: 0.1
-  n_epochs: 500
+  n_epochs: 50000
   append_loss_every: 50
-  print_every: 15
-  validate_every: 986
-  save_every: 1700000000000000000000000000
-  save_every_nepochs: 5
+  print_every: 10
+  validate_every: 740
+  save_every: 100000000000000000000000000000000
+  save_every_nepochs: 2
   start_epoch: 0
   start_iteration: 0
   visualize_every: 500
   apply_metrics_every: 7400
   load_ckpt: False
-  ckpt_path: logs/vaeTrain/fullyConv/2024_05_17_04_07_52/checkpoints/epoch-45.ckpt
+  #ckpt_path: logs/0.2ClampFullTraining/NOKL-SamplingApplied/2024_05_17_23_36_33/checkpoints/epoch-20.ckpt
+  #ckpt_path: logs/0.2ClampFullTrainingSmallLatentSpace/KL-SamplingAppliedContinueEpoch20FrozenEncoder/2024_05_18_13_00_25/checkpoints/epoch-2.ckpt
+  #ckpt_path: logs/vaeTrain/fullyConv/2024_05_17_04_07_52/checkpoints/epoch-60.ckpt
+  #ckpt_path: logs/overFitSmallTraining/2048OverfitKL/2024_05_18_14_59_08/checkpoints/epoch-2000.ckpt
+  #ckpt_path: logs/2048vaeTrain/204NoKLSampling/2024_05_18_15_25_03/checkpoints/epoch-16.ckpt
+  #ckpt_path: logs/2048vaeTrain/2040KLSamplingSmallKLLearningRate/2024_05_18_21_34_36/checkpoints/epoch-18.ckpt
+  #ckpt_path: logs/512vaeTrain/512LinearFUllTraining/2024_05_19_00_21_10/checkpoints/epoch-118.ckpt
+  #ckpt_path: logs/32*8*8*8vaeTrain/4*8*8*8TrainNoKLTraining/2024_05_19_23_53_19/checkpoints/epoch-50.ckpt
+  #ckpt_path: logs/32*8*8*8vaeTrain/2*8*8*8TrainWithNormalizedKLScheduler64^3/2024_05_20_12_59_38/checkpoints/epoch-24.ckpt
+  #ckpt_path: logs/exploringKLWeights/2*8*8**Sampling+25KLWeight/2024_05_20_21_35_25/checkpoints/epoch-16.ckpt
+  ckpt_path: logs/VaeTry2/8*8*8**FullTrain/2024_05_21_03_41_13/checkpoints/epoch-74.ckpt
   use_scheduler: False
   apply_metrics_batch_count: 5 # number of batches to apply additional metrics on
 #2024_05_16_20_23_24 id
@@ -31,7 +43,7 @@ dataset:
   dataset_field: shape_net_v3_sdf
   path: src/raw_dataset/ShapeNetV2/sdf_064  # For local testing without downloading shape => change to local_raw_dataset/ShapeNet
     # Can be overriden by dataset specific path
-  overfit_size: 64
+  overfit_size: 1
   split: train # train | valid | test
   is_overfit: False
 
@@ -106,16 +118,17 @@ model:
     losses: "l2,kl" #additional loss names
     lr: 0.0001
     criterion: MSE
-    kl_weight: 0.0001 #0.00001 #1e-4
+    base_kl_weight: 0.025 #0.00001 #1e-4
     reconst_weight: 1 #1
     scheduler_step_size: 300
     scheduler_gamma: 0.5
-    latent_space_size: 16384
-    weight_init: None    #None | normal | xavier | xavier_uniform | kaiming | orthogonal
+    cycle_iter: 1480
+    stop_cycle_count: 15000
+    weight_init: normal    #None | normal | xavier | xavier_uniform | kaiming | orthogonal
     gain: 0.02
     auto_encoder_networks:
       in_channels: 1
-      out_channels: 32
+      out_channels: 16
       ch_mult: [1, 2, 2, 4]
       num_res_blocks: 1
       attn_resolutions: [8]
