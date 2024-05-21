@@ -116,3 +116,12 @@ class VAE(AutoEncoder):
 
     def set_iteration(self, iteration):
         self.iteration = iteration
+
+    def prepare_visuals(self):
+        visuals = {
+            "reconstructions": self.predictions,
+            "target": self.target,
+            "samples": self.sample(n_samples=self.predictions.shape[0])[0],
+
+        }
+        return visuals

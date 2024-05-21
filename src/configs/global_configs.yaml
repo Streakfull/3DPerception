@@ -2,7 +2,7 @@
 # Add configurations as needed
 
 training:
-  name: VaeTry2
+  name: pytorch3d
   #name: dev
   description: KL Scheduler
   experiment_id: 16*8*8*8**Train # None | A unique id identifying the experiment folder
@@ -22,9 +22,9 @@ training:
   save_every_nepochs: 2
   start_epoch: 0
   start_iteration: 0
-  visualize_every: 500
+  visualize_every: 200
   apply_metrics_every: 7400
-  load_ckpt: False
+  load_ckpt: True
   #ckpt_path: logs/0.2ClampFullTraining/NOKL-SamplingApplied/2024_05_17_23_36_33/checkpoints/epoch-20.ckpt
   #ckpt_path: logs/0.2ClampFullTrainingSmallLatentSpace/KL-SamplingAppliedContinueEpoch20FrozenEncoder/2024_05_18_13_00_25/checkpoints/epoch-2.ckpt
   #ckpt_path: logs/vaeTrain/fullyConv/2024_05_17_04_07_52/checkpoints/epoch-60.ckpt
@@ -128,7 +128,7 @@ model:
     gain: 0.02
     auto_encoder_networks:
       in_channels: 1
-      out_channels: 16
+      out_channels: 8
       ch_mult: [1, 2, 2, 4]
       num_res_blocks: 1
       attn_resolutions: [8]

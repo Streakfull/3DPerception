@@ -100,3 +100,6 @@ class BaseModel(torch.nn.Module):
     def calculate_additional_metrics(self):
         metrics = {}
         return metrics
+
+    def prepare_visuals(self):
+        return {}

@@ -15,6 +15,37 @@ import matplotlib.pyplot as plt
 import k3d
 import io
 from IPython.display import Image as ImageDisplay
+import torchvision.utils as vutils
+from termcolor import cprint
+
+
+def tensor2im(image_tensor, imtype=np.uint8):
+    # image_numpy = image_tensor[0].cpu().float().numpy()
+    # if image_numpy.shape[0] == 1:
+    #     image_numpy = np.tile(image_numpy, (3, 1, 1))
+    # image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0
+    # return image_numpy.astype(imtype)
+
+    n_img = min(image_tensor.shape[0], 16)
+    image_tensor = image_tensor[:n_img]
+
+    if image_tensor.shape[1] == 1:
+        image_tensor = image_tensor.repeat(1, 3, 1, 1)
+
+    # if image_tensor.shape[1] == 4:
+        # import pdb; pdb.set_trace()
+
+    image_tensor = vutils.make_grid(image_tensor, nrow=4)
+
+    image_numpy = image_tensor.cpu().float().numpy()
+    image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.
+    return image_numpy.astype(imtype)
+
+
+def save_image(image_numpy, image_path):
+    image_pil = Image.fromarray(image_numpy)
+    image_pil.save(image_path)
+    cprint(f"{image_path} saved", "blue")
 
 
 def visualize_occupancy(occupancy_grid, flip_axes=False):

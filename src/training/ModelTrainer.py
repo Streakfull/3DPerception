@@ -41,7 +41,8 @@ class ModelTrainer:
                                             start_iteration=self.training_config["start_iteration"], last_loss=0.)
         self.model = ModelBuilder(
             self.global_configs["model"], self.training_config).get_model()
-        self.visualizer = Visualizer()
+        self.visualizer = Visualizer(
+            device=self.device, output_path=self.train_vars.visuals_path)
         self.logger.log_model_summary(
             self.model, batch_size=self.training_config["batch_size"])
         self.model.to(self.device)
@@ -89,8 +90,9 @@ class ModelTrainer:
 
             intial_pass = epoch == 0 and iteration == 0
             # visualization step
-            if iteration % self.training_config["visualize_every"] == (self.training_config["visualize_every"] - 1):
-                self.visualizer.visualize()
+            if (iteration % self.training_config["visualize_every"] == (self.training_config["visualize_every"] - 1) or intial_pass):
+                visuals = self.model.prepare_visuals()
+                self.visualizer.visualize(visuals, epoch, iteration)
 
             # log writer
             if iteration % self.training_config['print_every'] == (self.training_config['print_every'] - 1) or (
