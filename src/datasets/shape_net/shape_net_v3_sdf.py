@@ -23,7 +23,7 @@ class ShapeNetV3SDF(BaseShapeNet):
     def get_shape_sdf(self, shapenet_key):
         sdf = ShapeNetV3SDF.read_sdf(
             f"{self.dataset_path}/{shapenet_key}/ori_sample.h5")
-        sdf = np.clip(sdf, a_min=-0.2, a_max=0.2)
+        sdf = np.clip(sdf, a_min=-1, a_max=1)
         return sdf
 
     @staticmethod

@@ -109,8 +109,10 @@ class Encoder(nn.Module):
 
         # end
         h = self.norm_out(h)
-        h = nonlinearity(h)
-        h = self.conv_out(h)
+        h_base = nonlinearity(h)
+        mu = self.conv_mu(h_base)
+        logvar = self.conv_logvar(h_base)
+        # h = self.conv_out(h)
         # h = self.norm_out_2(h)
         # h = nonlinearity(h)
-        return h
+        return mu, logvar

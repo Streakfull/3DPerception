@@ -12,21 +12,21 @@ class VAE(AutoEncoder):
     def __init__(self, configs):
         super().__init__(configs)
         self.base_kl_weight = configs['base_kl_weight']
-        self.base_reconst_weight = configs['base_reconst_weight']
+       # self.base_reconst_weight = configs['base_reconst_weight']
         self.cycle_iter = configs['cycle_iter']
         self.stop_cycle_count = configs['stop_cycle_count']
         self.encoder_channels = configs["auto_encoder_networks"]["out_channels"]
         self.reconst_weight = configs['reconst_weight']
 
-        self.conv_mu = nn.Conv3d(
-            in_channels=64, out_channels=self.encoder_channels, kernel_size=3, padding=1)
-        self.linear_mu = nn.Linear(
-            in_features=2048, out_features=2048)
-        if (self.is_vae):
-            self.conv_logvar = nn.Conv3d(
-                in_channels=64, out_channels=self.encoder_channels, kernel_size=3, padding=1)
-            self.linear_logvar = nn.Linear(
-                in_features=2048, out_features=2048)
+        # self.conv_mu = nn.Conv3d(
+        #     in_channels=64, out_channels=self.encoder_channels, kernel_size=3, padding=1)
+        # self.linear_mu = nn.Linear(
+        #     in_features=2048, out_features=2048)
+        # if (self.is_vae):
+        # self.conv_logvar = nn.Conv3d(
+        #     in_channels=64, out_channels=self.encoder_channels, kernel_size=3, padding=1)
+        # self.linear_logvar = nn.Linear(
+        #     in_features=2048, out_features=2048)
 
         self.kl = KLDivergence()
         # self.norm_mu = nn.LayerNorm(1024)
@@ -39,9 +39,9 @@ class VAE(AutoEncoder):
 
     def forward(self, x):
         self.target = x
-        x = self.encoder(x)
-
-        self.mu = self.conv_mu(x)
+        mu, logvar = self.encoder(x)
+        self.mu = mu
+        self.logvar = logvar
        # self.mu = nonlinearity(self.mu).flatten(1)
         # self.mu = self.norm_mu(self.mu)
         # self.mu = self.linear_mu(self.mu)
@@ -49,16 +49,17 @@ class VAE(AutoEncoder):
        # self.mu = self.norm_mu(self.mu)
         if (self.is_vae):
             if (self.training):
-                self.logvar = self.conv_logvar(x)
+                z = self._reparameterize(self.mu, self.logvar)
+                # self.logvar = self.conv_logvar(x)
                 # self.logvar = nonlinearity(self.logvar).flatten(1)
                 # self.logvar = self.linear_logvar(self.logvar)
             else:
                 self.logvar = torch.zeros_like(self.mu, device=self.mu.device)
+                z = self.mu
 
             # self.logvar = self.norm_logvar(self.logvar)
             # self.logvar = self.linear_logvar(self.logvar)
 
-            z = self._reparameterize(self.mu, self.logvar)
             # z = rearrange(z, 'bs (ch l w h) -> bs ch l w h',
             # ch=4, l=8, w=8, h=8)
 
@@ -80,7 +81,10 @@ class VAE(AutoEncoder):
         self.reconst_loss = self.criterion(self.predictions, self.target)
         self.set_kl_weight()
         if (self.is_vae):
-            self.kl_loss = self.kl(self.mu, self.logvar)
+            if (self.kl_weight > 0):
+                self.kl_loss = self.kl(self.mu, self.logvar)
+            else:
+                self.kl_loss = torch.tensor(0)
         self.loss = (self.reconst_weight*self.reconst_loss) + \
             (self.kl_weight*self.kl_loss)
         self.signedIou = SignedIou().calc(self.predictions, self.target)
@@ -101,7 +105,7 @@ class VAE(AutoEncoder):
         self.kl_weight = self.base_kl_weight * self.kl_weight
 
     def get_metrics(self):
-        return {'loss': self.loss.data, 'l1': self.reconst_loss.data, 'kl': self.kl_loss.data, 'signedIou': 0}
+        return {'loss': self.loss.data, 'l2': self.reconst_loss.data, 'kl': self.kl_loss.data, 'signedIou': 0}
 
     def calculate_additional_metrics(self):
         metrics = {}
@@ -114,10 +118,11 @@ class VAE(AutoEncoder):
         super().init_weights()
         init_type = self.configs['weight_init']
         gain = self.configs['gain']
-        init_weights(self.conv_mu, init_type=init_type, gain=gain)
+        # init_weights(self.conv_mu, init_type=init_type, gain=gain)
         # init_weights(self.linear_mu, init_type=init_type, gain=gain)
         if (self.is_vae):
-            init_weights(self.conv_logvar, init_type=init_type, gain=gain)
+            pass
+            # init_weights(self.conv_logvar, init_type=init_type, gain=gain)
             # init_weights(self.linear_logvar, init_type=init_type, gain=gain)
 
     def sample(self, n_samples=1, device="cuda:0"):
