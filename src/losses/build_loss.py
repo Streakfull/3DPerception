@@ -27,4 +27,7 @@ class BuildLoss:
             case "KL":
                 return KLDivergence()
 
+            case "L1":
+                return nn.L1Loss()
+
         return nn.CrossEntropyLoss()

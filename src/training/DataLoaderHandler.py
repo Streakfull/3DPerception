@@ -17,7 +17,6 @@ class DataLoaderHandler:
                                                   class_name=local_dataset_config["class"])
         self.dataset = self.dataset_type(
             global_dataset_config, local_dataset_config)
-        print('length: ', len(self.dataset))
 
         train_ds, valid_ds = self.train_val_dataset(self.dataset, test_size)
 
@@ -27,7 +26,8 @@ class DataLoaderHandler:
             shuffle=True,
             num_workers=num_workers,  # Data is usually loaded in parallel by num_workers
             pin_memory=True,
-            drop_last=True,  # This is an implementation detail to speed up data uploading to the GPU
+            # This is an implementation detail to speed up data uploading to the GPU
+            drop_last=not global_dataset_config["is_overfit"],
         )
 
         self.validation_dataloader = DataLoader(
@@ -36,7 +36,8 @@ class DataLoaderHandler:
             shuffle=True,
             num_workers=num_workers,  # Data is usually loaded in parallel by num_workers
             pin_memory=True,
-            drop_last=True  # This is an implementation detail to speed up data uploading to the GPU
+            # This is an implementation detail to speed up data uploading to the GPU
+            drop_last=not global_dataset_config["is_overfit"]
         )
 
     @staticmethod

@@ -72,6 +72,7 @@ class Logger:
                 log_file.write('%s\n' % message)
 
     def log_model_summary(self, model, input_shape=(1, 64, 64, 64), batch_size=1):
+        # return
         input_shape = (batch_size,) + input_shape
         params = summarize_model(model)
         shapes_archi = str(summary(model, input_shape, verbose=0))
@@ -93,5 +94,8 @@ class Logger:
             "%Y_%m_%d_%H_%M_%S")
 
     def log_image(self, tag, img, iteration):
-        self._writer.add_image(tag=tag, img_tensor=img,
-                               global_step=iteration, dataformats='HWC')
+        self._writer.add_images(tag=tag, img_tensor=img,
+                                global_step=iteration, dataformats="NHWC",
+
+
+                                )

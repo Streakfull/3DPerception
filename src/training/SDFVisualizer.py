@@ -24,12 +24,20 @@ class SDFVisualizer:
         imgs = tensor2im(images)
         save_image(
             imgs, image_path=f"{self.output_path}/{self.key}/epoch_{self.epoch}_iter_{self.iteration}.png")
+        images = images[:, 0:3, :, :]
         images = rearrange(images, 'bs ch w h->bs w h ch')
         images = images + 1 / (2.0*255.)
-        for i in range(images.shape[0]):
-            self.logger.log_image(
-                f"Train/{self.key}", images[i].squeeze(), self.iteration+i)
+        self.logger.log_image(
+            f"Train/{self.key}", images, self.iteration)
+ # for i in range(images.shape[0]):
+        #     self.logger.log_image(
+        #         f"Train/{self.key}", images[i].squeeze(), self.iteration+i)
 
     def handle_gif(self, mesh):
-        save_mesh_as_gif(self.render, mesh,
-                         out_name=f"{self.output_path}/{self.key}/epoch_{self.epoch}_iter_{self.iteration}.gif")
+        try:
+            if (mesh is not None):
+                save_mesh_as_gif(self.render, mesh,
+                                 out_name=f"{self.output_path}/{self.key}/epoch_{self.epoch}_iter_{self.iteration}.gif")
+        except:
+            import pdb
+            pdb.set_trace()

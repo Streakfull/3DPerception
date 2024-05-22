@@ -35,5 +35,5 @@ class ShapeNetV3SDF(BaseShapeNet):
         h5_f = h5py.File(sdf_h5_file, 'r')
         sdf = h5_f['pc_sdf_sample'][:].astype(np.float32)
         sdf = (sdf).reshape(64, 64, 64)
-        sdf = np.clip(sdf, a_min=-1, a_max=1)
+        # sdf = np.clip(sdf, a_min=-1, a_max=1)
         return sdf

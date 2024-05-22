@@ -47,6 +47,8 @@ class ModelTrainer:
             self.model, batch_size=self.training_config["batch_size"])
         self.model.to(self.device)
 
+        self.is_overfit = self.global_configs["dataset"]["is_overfit"]
+
     def _train_one_epoch(self, epoch):
         train_loss_running = self._init_train_loss_dict()
         batch_iteration = 0
@@ -57,8 +59,20 @@ class ModelTrainer:
         metric_batch_indices = np.random.randint(len(
             self.train_dataloader), size=self.training_config["apply_metrics_batch_count"])
 
-        # for batch_idx, batch in self.tqdm(enumerate(self.train_dataloader), total=len(self.train_dataloader)):
-        for batch_idx, batch in enumerate(self.train_dataloader):
+        # enumeration = self.tqdm(
+        #     enumerate(self.train_dataloader), total=len(self.train_dataloader))
+
+        # if (self.is_overfit):
+        #     enumeration = enumerate(self.train_dataloader)
+        enumartion = None
+        if (self.is_overfit):
+            enumartion = enumerate(self.train_dataloader)
+        else:
+            enumartion = self.tqdm(
+                enumerate(self.train_dataloader), total=len(self.train_dataloader))
+
+        for batch_idx, batch in enumartion:
+            # for batch_idx, batch in enumerate(self.train_dataloader):
             self.model.train()
             iteration = epoch * len(self.train_dataloader) + batch_idx
             if iteration < self.train_vars.start_iteration:
@@ -75,7 +89,7 @@ class ModelTrainer:
             self._add_losses_to_dict(train_loss_running)
             batch_iteration += 1
 
-            if (batch_idx in metric_batch_indices):
+            if (batch_idx in metric_batch_indices and not self.is_overfit):
                 cprint.ok(
                     f"Calculating additional metrics for training batch {batch_idx}")
                 additional_metrics = self.model.calculate_additional_metrics()
@@ -107,7 +121,8 @@ class ModelTrainer:
                     "Train/Loss", avg_train_loss["loss"], iteration)
                 self.logger.add_scalar(
                     "Train/KLWeight", self.model.kl_weight, iteration)
-
+                self.logger.add_scalar(
+                    "Train/L1Weight", self.model.reconst_weight, iteration)
                 self._add_scalars(avg_train_loss, iteration)
                 self.train_vars.last_loss = avg_train_loss
                 train_loss_running = self._init_train_loss_dict()
@@ -121,7 +136,7 @@ class ModelTrainer:
 
             # validation step
             if iteration % self.training_config['validate_every'] == (self.training_config['validate_every'] - 1) or (
-                    intial_pass):
+                    intial_pass) and not self.is_overfit:
                 cprint.ok("Running Validation")
                 self.model.eval()
                 val_loss_running = 0.
@@ -201,7 +216,7 @@ class ModelTrainer:
             if epoch < start_epoch:
                 continue
             self._train_one_epoch(epoch)
-            if epoch % self.training_config["save_every_nepochs"] == 0:
+            if epoch % self.training_config["save_every_nepochs"] == 0 and not self.is_overfit:
                 self.model.save(self.train_vars.model_checkpoint_path, epoch)
             if (self.training_config['use_scheduler']):
                 self.model.update_lr()
