@@ -102,5 +102,5 @@ class Decoder(nn.Module):
         h = self.norm_out(h)
         h = nonlinearity(h)
         h = self.conv_out(h)
-        # h = self.sigmoid(h)
+        h = self.sigmoid(h)*0.2
         return h

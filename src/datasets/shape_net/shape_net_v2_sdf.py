@@ -23,8 +23,8 @@ class ShapeNetV2SDF(BaseShapeNet):
 
     def get_shape_sdf(self, shapenet_key):
         sdf = np.load(
-            f"{self.dataset_path}/{shapenet_key}/models/model_normalized_64.npy")
-        sdf = np.clip(sdf, a_min=-0.2, a_max=1)
+            f"{self.dataset_path}/{shapenet_key}/models/model_normalized_size-64_pd-4_tr-6.npy")
+        sdf = np.clip(sdf, a_min=0, a_max=0.2)
         return sdf
 
     @staticmethod

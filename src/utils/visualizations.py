@@ -38,7 +38,12 @@ def tensor2im(image_tensor, imtype=np.uint8):
     image_tensor = vutils.make_grid(image_tensor, nrow=4)
 
     image_numpy = image_tensor.cpu().float().numpy()
+    # import pdb
+    # pdb.set_trace()
     image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.
+    # image_numpy = np.rot90(image_numpy)
+    # image_numpy = (np.transpose(image_numpy, (2, 1, 0)) + 1) / 2.0 * 255.
+
     return image_numpy.astype(imtype)
 
 
@@ -225,9 +230,12 @@ def visualize_mesh(vertices, faces, flip_axes=False):
     # vertices[:, 2] = vertices[:, 2] * -1
     # vertices[:, [0, 1, 2]] = vertices[:, [0, 2, 1]]
     if flip_axes:
+        pass
         # vertices[:, 2] = vertices[:, 2] * -1
+
         vertices[:, [0, 1, 2]] = vertices[:, [2, 0, 1]]
-       # vertices[:, 1] = vertices[:, 1] * -1
+
+        # vertices[:, 1] = vertices[:, 1] * -1
         # vertices[:, [0, 1, 2]] = vertices[:, [1, 0, 2]]
 
     plt_mesh = k3d.mesh(vertices.astype(np.float32),

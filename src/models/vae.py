@@ -34,6 +34,7 @@ class VAE(AutoEncoder):
 
     @property
     def is_vae(self):
+        # return True
         return True
         return self.kl_weight > 0
 
@@ -81,16 +82,15 @@ class VAE(AutoEncoder):
         self.reconst_loss = self.criterion(self.predictions, self.target)
         self.set_kl_weight()
         if (self.is_vae):
-            if (self.kl_weight > 0):
-                self.kl_loss = self.kl(self.mu, self.logvar)
-            else:
-                self.kl_loss = torch.tensor(0)
+            self.kl_loss = self.kl(self.mu, self.logvar)
+        else:
+            self.kl_loss = torch.tensor(0)
         self.loss = (self.reconst_weight*self.reconst_loss) + \
             (self.kl_weight*self.kl_loss)
-        self.signedIou = SignedIou().calc(self.predictions, self.target)
+        self.signedIou = 0
 
     def set_kl_weight(self):
-
+        # 14999
         div = self.iteration / self.cycle_iter
         current_iteration = 0
         if (div < 0):
