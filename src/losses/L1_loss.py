@@ -3,26 +3,28 @@ import torch
 import torch.nn.functional as F
 
 
-class KLDivergence(nn.Module):
+class L1(nn.Module):
     def __init__(self, reduction='mean'):
-        super(KLDivergence, self).__init__()
+        super(L1, self).__init__()
         self.reduction = reduction
         # self.kl_loss = nn.KLDivLoss(reduction="batchmean")
 
-    def forward(self, mu, logvar):
-        try:
-            loss = -0.5 * torch.sum(1 + logvar.flatten(1) - mu.flatten(1).pow(2) -
-                                    logvar.flatten(1).exp(), dim=1)
+    def forward(self, prediction, target):
+        loss = torch.abs(
+            prediction.contiguous() - target.contiguous())
 
-        except:
-            loss = torch.ones_like(mu.flatten(1))
-        # loss = loss / mu.flatten(1).shape[1]
+        # l
+
         if self.reduction == 'mean':
             return torch.mean(loss, dim=0)
         elif self.reduction == 'sum':
             return loss.sum()
+        elif self.reduction == 'batch_mean':
+            loss = loss.sum() / loss.flatten(1).shape[0]
+            return loss
         elif self.reduction == 'none':
             return loss
+
         else:
             raise Exception('Unexpected reduction {}'.format(self.reduction))
 

@@ -17,13 +17,15 @@ class Decoder(nn.Module):
         self.resolution = resolution
         self.in_channels = in_channels
         # self.in_channels = 1
-        block_in = self.in_channels
+        block_in = self.in_channels * 2
         curr_res = resolution // 2**(self.num_resolutions-1)
         self.z_shape = (1, self.in_channels, curr_res, curr_res, curr_res)
         self.sigmoid = nn.Sigmoid()
         print("Decoding of shape {} = {} dimensions.".format(
             self.z_shape, np.prod(self.z_shape)))
 
+        # import pdb
+        # pdb.set_trace()
         # z to block_in
         self.conv_in = torch.nn.Conv3d(self.in_channels,
                                        block_in,
@@ -73,6 +75,7 @@ class Decoder(nn.Module):
                                         kernel_size=3,
                                         stride=1,
                                         padding=1)
+        self.norm_out_2 = Normalize(1)
 
     def forward(self, z):
         # assert z.shape[1:] == self.z_shape[1:]
@@ -82,6 +85,7 @@ class Decoder(nn.Module):
         temb = None
 
         # z to block_in
+
         h = self.conv_in(z)
 
         # middle
@@ -102,5 +106,6 @@ class Decoder(nn.Module):
         h = self.norm_out(h)
         h = nonlinearity(h)
         h = self.conv_out(h)
+        h = self.norm_out_2(h)
         h = self.sigmoid(h)*0.2
         return h

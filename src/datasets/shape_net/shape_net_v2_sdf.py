@@ -12,20 +12,26 @@ class ShapeNetV2SDF(BaseShapeNet):
 
     def __getitem__(self, index):
         shape_key, class_index, class_name, id = super().__getitem__(index)
-        sdf = self.get_shape_sdf(shape_key)
+        sdf,  y = self.get_shape_sdf(shape_key)
         return {
             "sdf": sdf[np.newaxis, :, :, :],
             "label": class_index,
             "class_name": class_name,
-            "id": id
+            "id": id,
 
         }
 
     def get_shape_sdf(self, shapenet_key):
-        sdf = np.load(
-            f"{self.dataset_path}/{shapenet_key}/models/model_normalized_size-64_pd-4_tr-6.npy")
-        sdf = np.clip(sdf, a_min=0, a_max=0.2)
-        return sdf
+        try:
+            sdf = np.load(
+                f"{self.dataset_path}/{shapenet_key}/models/model_normalized_size-64_pd-4_tr-6.npy")
+            sdf = np.clip(sdf, a_min=0, a_max=0.2)
+            y = None
+        except:
+            y = f"{self.dataset_path}/{shapenet_key}"
+            sdf = np.zeros((64, 64, 64))
+
+        return sdf, y
 
     @staticmethod
     def move_batch_to_device(batch, device):

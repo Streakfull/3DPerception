@@ -2,6 +2,7 @@ from torch import nn
 from src.losses.dice_loss import DiceLoss
 from src.losses.KL_divergence import KLDivergence
 import torch
+from src.losses.L1_loss import L1
 
 
 class BuildLoss:
@@ -22,12 +23,13 @@ class BuildLoss:
                 return nn.CrossEntropyLoss()
 
             case "MSE":
-                return nn.MSELoss(reduction="mean")
+                return nn.MSELoss(reduction="sum")
 
             case "KL":
                 return KLDivergence()
 
             case "L1":
-                return nn.L1Loss()
+                # return nn.L1Loss(reduction="sum")
+                return L1(reduction="batch_mean")
 
         return nn.CrossEntropyLoss()
