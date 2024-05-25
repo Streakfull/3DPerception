@@ -23,13 +23,13 @@ class BuildLoss:
                 return nn.CrossEntropyLoss()
 
             case "MSE":
-                return nn.MSELoss(reduction="sum")
+                return nn.MSELoss(reduction="mean")
 
             case "KL":
                 return KLDivergence()
 
             case "L1":
                 # return nn.L1Loss(reduction="sum")
-                return L1(reduction="batch_mean")
+                return L1(reduction="mean")
 
         return nn.CrossEntropyLoss()

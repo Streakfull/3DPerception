@@ -25,7 +25,8 @@ class ShapeNetV2SDF(BaseShapeNet):
         try:
             sdf = np.load(
                 f"{self.dataset_path}/{shapenet_key}/models/model_normalized_size-64_pd-4_tr-6.npy")
-            sdf = np.clip(sdf, a_min=0, a_max=0.2)
+            # print(":HIII")
+            # sdf = np.clip(sdf, a_min=0, a_max=0.2)
             y = None
         except:
             y = f"{self.dataset_path}/{shapenet_key}"

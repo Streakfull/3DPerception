@@ -15,9 +15,9 @@ class Decoder(nn.Module):
         self.num_resolutions = len(ch_mult)
         self.num_res_blocks = num_res_blocks
         self.resolution = resolution
-        self.in_channels = in_channels
+        self.in_channels = 4
         # self.in_channels = 1
-        block_in = self.in_channels * 2
+        block_in = self.in_channels * 16
         curr_res = resolution // 2**(self.num_resolutions-1)
         self.z_shape = (1, self.in_channels, curr_res, curr_res, curr_res)
         self.sigmoid = nn.Sigmoid()
@@ -106,6 +106,6 @@ class Decoder(nn.Module):
         h = self.norm_out(h)
         h = nonlinearity(h)
         h = self.conv_out(h)
-        h = self.norm_out_2(h)
-        h = self.sigmoid(h)*0.2
+        # h = self.norm_out_2(h)
+        # h = self.sigmoid(h)*0.2
         return h

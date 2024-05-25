@@ -16,7 +16,7 @@ class L1(nn.Module):
         # l
 
         if self.reduction == 'mean':
-            return torch.mean(loss, dim=0)
+            return torch.mean(loss)
         elif self.reduction == 'sum':
             return loss.sum()
         elif self.reduction == 'batch_mean':

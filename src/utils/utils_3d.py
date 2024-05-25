@@ -162,8 +162,8 @@ def sdf_to_mesh(sdf, level=0.02, color=None, render_all=False):
         verts_i = verts_i / n_cell - .5
 
         verts_i = torch.from_numpy(verts_i).float().to(device)
-        verts_i[:, 0] = verts_i[:, 0]*-1
-        verts_i[:, 2] = verts_i[:, 2]*-1
+        # verts_i[:, 0] = verts_i[:, 0]*-1
+        # verts_i[:, 2] = verts_i[:, 2]*-1
         # verts_i[:, [0, 1, 2]] = verts_i[:, [0, 2, 1]]
         faces_i = torch.from_numpy(faces_i.astype(np.int64)).to(device)
         text_i = torch.ones_like(verts_i).to(device)
