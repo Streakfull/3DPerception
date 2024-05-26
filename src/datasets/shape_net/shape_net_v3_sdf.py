@@ -16,8 +16,8 @@ class ShapeNetV3SDF(BaseShapeNet):
             "sdf": sdf[np.newaxis, :, :, :],
             "label": class_index,
             "class_name": class_name,
-            "id": id
-
+            "id": id,
+            "path":  f"{self.dataset_path}/{shape_key}"
         }
 
     def get_shape_sdf(self, shapenet_key):

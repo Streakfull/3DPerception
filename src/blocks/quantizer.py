@@ -95,8 +95,12 @@ class VectorQuantizer(nn.Module):
         else:
             z_q = rearrange(z_q, 'b d h w c -> b c d h w').contiguous()
 
-        min_encoding_indices = min_encoding_indices.reshape(
-            z_q.shape[0], z_q.shape[2], z_q.shape[3], z_q.shape[4])
+        if not is_voxel:
+            min_encoding_indices = min_encoding_indices.reshape(
+                z_q.shape[0], z_q.shape[2], z_q.shape[3])
+        else:
+            min_encoding_indices = min_encoding_indices.reshape(
+                z_q.shape[0], z_q.shape[2], z_q.shape[3], z_q.shape[4])
 
         return z_q, loss, (perplexity, min_encodings, min_encoding_indices)
 

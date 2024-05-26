@@ -70,10 +70,12 @@ class PVQVAE(BaseModel):
         return dec
 
     def decode_from_quant(self, quant_code):
-        embed_from_code = self.quantize.embedding(quant_code)
-        return embed_from_code
+        z_q = self.quantize.embedding(quant_code)
+        z_q = rearrange(z_q, 'bs d w h ch -> bs ch d w h')
+        z_q = self.decode(z_q)
+        return z_q
 
-    def decode_enc_idices(self, enc_indices, z_spatial_dim=8):
+    def decode_enc_indices(self, enc_indices, z_spatial_dim=8):
 
         # for transformer
         enc_indices = rearrange(enc_indices, 't bs -> (bs t)')
@@ -82,20 +84,6 @@ class PVQVAE(BaseModel):
                         d1=z_spatial_dim, d2=z_spatial_dim, d3=z_spatial_dim)
         dec = self.decode(z_q)
         return dec
-
-    def decode_code(self, code_b):
-        quant_b = self.quantize.embed_code(code_b)
-        dec = self.decode(quant_b)
-        return dec
-
-    # def forward(self, input, verbose=False):
-    #     quant, diff, info = self.encode(input)
-    #     dec = self.decode(quant)
-
-    #     if verbose:
-    #         return dec, quant, diff, info
-    #     else:
-    #         return dec, diff
 
     @staticmethod
     # def unfold_to_cubes(self, x, cube_size=8, stride=8):
@@ -142,10 +130,10 @@ class PVQVAE(BaseModel):
 
     def inference(self, data):
         self.eval()
-        self.set_input(data)
-
         # make sure it has the same name as forward
         with torch.no_grad():
+            self.x_cubes = self.unfold_to_cubes(
+                data, self.cube_size, self.stride)
             self.zq_cubes, qloss, self.info = self.encode(self.x_cubes)
             self.qloss = qloss
             self.zq_voxels = self.fold_to_voxels(
@@ -190,3 +178,8 @@ class PVQVAE(BaseModel):
 
     def set_iteration(self, iteration):
         self.iteration = iteration
+
+    def get_codebook_weight(self):
+        ret = self.quantize.embedding.cpu().state_dict()
+        self.quantize.embedding.cuda()
+        return ret

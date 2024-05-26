@@ -23,7 +23,7 @@ training:
   start_iteration: 0
   visualize_every: 200
   apply_metrics_every: 1525
-  load_ckpt: False
+  load_ckpt: True
   #ckpt_path: logs/0.2ClampFullTraining/NOKL-SamplingApplied/2024_05_17_23_36_33/checkpoints/epoch-20.ckpt
   #ckpt_path: logs/0.2ClampFullTrainingSmallLatentSpace/KL-SamplingAppliedContinueEpoch20FrozenEncoder/2024_05_18_13_00_25/checkpoints/epoch-2.ckpt
   #ckpt_path: logs/vaeTrain/fullyConv/2024_05_17_04_07_52/checkpoints/epoch-60.ckpt
@@ -36,7 +36,8 @@ training:
   #ckpt_path: logs/exploringKLWeights/2*8*8**Sampling+25KLWeight/2024_05_20_21_35_25/checkpoints/epoch-16.ckpt
   #ckpt_path: logs/VaeTry2/8*8*8**FullTrain/2024_05_21_03_41_13/checkpoints/epoch-74.ckpt
  # ckpt_path: logs/vaePlzWork/32chTrainL1LossSum/2024_05_23_19_42_30/checkpoints/epoch-32.ckpt
-  ckpt_path: logs/vaeLogs/2048LinFullTraining/2024_05_25_17_24_55/checkpoints/epoch-26.ckpt
+  #ckpt_path: logs/vaeLogs/2048LinFullTraining/2024_05_25_17_24_55/checkpoints/epoch-26.ckpt
+  ckpt_path: logs/pvqVAE/pvqVAE-Train/2024_05_26_02_46_01/checkpoints/epoch-114.ckpt # Very Important
   use_scheduler: True
   apply_metrics_batch_count: 5 # number of batches to apply additional metrics on
 #2024_05_16_20_23_24 id
