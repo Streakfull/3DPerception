@@ -18,7 +18,7 @@ class BaseModel(torch.nn.Module):
     def initialize(self, opt):
         self.opt = opt
         self.is_train = opt.is_train
-
+        self.configs = opt
         if self.is_train:
             self.save_dir = os.path.join(opt.logs_dir, opt.name, 'checkpoints')
 

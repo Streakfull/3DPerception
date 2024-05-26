@@ -83,9 +83,9 @@ class ModelTrainer:
             self.model.step(x)
             losses = self.model.get_metrics()
             loss = losses.get("loss")
-            iou = losses.get("signedIou")
+            # iou = losses.get("signedIou")
             train_loss_running["loss"] += loss
-            train_loss_running["signedIou"] += iou
+            # train_loss_running["signedIou"] += iou
             self._add_losses_to_dict(train_loss_running)
             batch_iteration += 1
 
@@ -119,10 +119,12 @@ class ModelTrainer:
                     f'[{epoch:03d}/{batch_idx:05d}] train_loss: {avg_train_loss["loss"]:.6f}')
                 self.logger.add_scalar(
                     "Train/Loss", avg_train_loss["loss"], iteration)
+                # self.logger.add_scalar(
+                #     "Train/KLWeight", self.model.kl_weight, iteration)
+                # self.logger.add_scalar(
+                #     "Train/L1Weight", self.model.reconst_weight, iteration)
                 self.logger.add_scalar(
-                    "Train/KLWeight", self.model.kl_weight, iteration)
-                self.logger.add_scalar(
-                    "Train/L1Weight", self.model.reconst_weight, iteration)
+                    "Train/LR", self.model.optimizer.param_groups[0]['lr'], iteration)
                 self._add_scalars(avg_train_loss, iteration)
                 self.train_vars.last_loss = avg_train_loss
                 train_loss_running = self._init_train_loss_dict()
@@ -161,7 +163,7 @@ class ModelTrainer:
                         metrics = self.model.get_metrics()
                         val_loss = metrics.get("loss")
                         val_loss_running += val_loss
-                        val_iou_running = metrics.get("signedIou")
+                        # val_iou_running = metrics.get("signedIou")
                         for key in metrics.keys():
                             if (key == "loss" or key == "signedIou"):
                                 continue
@@ -175,7 +177,7 @@ class ModelTrainer:
                                     key)
                         index_batch += 1
                 avg_loss_val = val_loss_running / index_batch
-                avg_iou_val = val_iou_running / index_batch
+               # avg_iou_val = val_iou_running / index_batch
                 for key in losses_dict.keys():
                     losses_dict[key] = losses_dict[key] / index_batch
 
@@ -194,8 +196,8 @@ class ModelTrainer:
                     f'{self.train_vars.best_loss_val:.6f}')
                 self.logger.add_scalar(
                     "Validation/Loss", avg_loss_val, iteration)
-                self.logger.add_scalar(
-                    "Validation/SignedIou", avg_iou_val, iteration)
+                # self.logger.add_scalar(
+                #     "Validation/SignedIou", avg_iou_val, iteration)
                 self.logger.add_scalars('Validation/LossComparison',
                                         {'Training':  self.train_vars.last_loss["loss"],
                                             'Validation': avg_loss_val},

@@ -61,7 +61,7 @@ class Encoder(nn.Module):
                                            dropout=dropout)
 
         self.norm_out = Normalize(block_in)
-        self.norm_out_2 = Normalize(self.out_channels)
+        # self.norm_out_2 = Normalize(self.out_channels)
         self.conv_out = torch.nn.Conv3d(block_in,
                                         out_channels=self.out_channels,
                                         # out_channels=64,
@@ -85,8 +85,8 @@ class Encoder(nn.Module):
         # self.norm_out_2 = Normalize(64)
 
     def forward(self, x):
-        assert x.shape[2] == x.shape[3] == self.resolution, "{}, {}, {}".format(
-            x.shape[2], x.shape[3], self.resolution)
+        # assert x.shape[2] == x.shape[3] == self.resolution, "{}, {}, {}".format(
+        #     x.shape[2], x.shape[3], self.resolution)
 
         # h = self.norm_in(x)
         h = self.conv_in(x)
@@ -112,7 +112,7 @@ class Encoder(nn.Module):
         h = self.norm_out(h)
         h = nonlinearity(h)
         h = self.conv_out(h)
-        h = self.norm_out_2(h)
-        h = nonlinearity(h)
+        # h = self.norm_out_2(h)
+        # h = nonlinearity(h)
 
         return h
