@@ -195,6 +195,32 @@ model:
       dropout: 0.0
       resamp_with_conv: true
       resolution: 64
+  
+  decoder_transformer:
+    model_filepath: src/models/pvqvae.py
+    model_class: PVQVAE
+    metrics: iou,chamferDistance   # None | iou | chamferDistance
+    losses: "l1,codebook" #additional loss names
+    lr: 1.0e-4
+    criterion: L1
+    scheduler_step_size: 30
+    scheduler_gamma: 0.9
+
+    embed_dim: 768
+    n_tokens: 512
+    n_head: 12
+    n_layers_enc: 12
+    d_mlp: 256
+    dropout: 0.1
+    pvqvae:
+      embed_dim: 256
+      n_embed: 512
+    p_encoding:
+      init_factor: 10
+      pos_dim: 3
+      zq_dim: 8
+      pos_embed_dim: 128
+
 
 evaluation:
   ckpt_path: #Path of saved parameters
