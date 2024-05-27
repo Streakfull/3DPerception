@@ -19,15 +19,15 @@ class ShapeNetCode(BaseShapeNet):
             "label": class_index,
             "class_name": class_name,
             "id": id,
-            "code": code,
-            "code_ix": code_ix
+            "z_q": code,
+            "idx": code_ix
         }
 
     @staticmethod
     def move_batch_to_device(batch, device):
         batch['sdf'] = batch['sdf'].float().to(device)
-        batch['code'] = batch['code'].float().to(device)
-        batch['code_ix'] = batch['code_ix'].to(device)
+        batch['z_q'] = batch['z_q'].float().to(device)
+        batch['idx'] = batch['idx'].long().to(device)
 
     def get_codes(self, shape_key):
         code_ix = np.load(f"{self.dataset_path}/{shape_key}/codeix.npy")

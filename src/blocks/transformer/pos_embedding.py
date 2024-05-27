@@ -11,14 +11,14 @@ class PEPixelTransformer(nn.Module):
     def __init__(self, pe_conf=None):
         super().__init__()
 
-        pos_dim = pe_conf.pos_dim
-        pos_embed_dim = pe_conf.pos_embed_dim
+        pos_dim = pe_conf["pos_dim"]
+        pos_embed_dim = pe_conf["pos_embed_dim"]
         assert pos_embed_dim % 2 == 0, 'require even embedding dimension'
 
         # pos_dim = grid_flat.shape[0]
         # proj_layer is a matrix to look up the proj of the certain coor.
         self.proj_layer = nn.Parameter(torch.randn(
-            pos_dim, pos_embed_dim // 2) * pe_conf.init_factor)
+            pos_dim, pos_embed_dim // 2) * pe_conf["init_factor"])
         self.proj_layer.requires_grad = False
 
     def forward(self, pos):

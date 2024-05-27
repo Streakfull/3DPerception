@@ -27,7 +27,8 @@ class DataLoaderHandler:
             num_workers=num_workers,  # Data is usually loaded in parallel by num_workers
             pin_memory=True,
             # This is an implementation detail to speed up data uploading to the GPU
-            drop_last=not global_dataset_config["is_overfit"],
+            # drop_last=not global_dataset_config["is_overfit"],
+            drop_last=True
         )
 
         self.validation_dataloader = DataLoader(
@@ -37,7 +38,8 @@ class DataLoaderHandler:
             num_workers=num_workers,  # Data is usually loaded in parallel by num_workers
             pin_memory=True,
             # This is an implementation detail to speed up data uploading to the GPU
-            drop_last=not global_dataset_config["is_overfit"]
+            # drop_last=not global_dataset_config["is_overfit"]
+            drop_last=True
         )
 
     @staticmethod

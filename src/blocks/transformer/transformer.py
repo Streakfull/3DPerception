@@ -10,14 +10,15 @@ from src.blocks.transformer.pos_embedding import PEPixelTransformer
 
 class Transformer(nn.Module):
     def __init__(self, config):
-        self.config = config
+        super().__init__()
+        self.configs = config
         self.codebook_size = config['pvqvae']['n_embed']
         vq_embed_dim = config['pvqvae']['embed_dim']
 
         p_encoding_conf = config['p_encoding']
         pos_embed_dim = p_encoding_conf['pos_embed_dim']
 
-        n_tokens = config['ntokens']
+        n_tokens = config['n_tokens']
         tf_embed_dim = config['embed_dim']
         n_head = config['n_head']
         n_layers_enc = config['n_layers_enc']
@@ -100,9 +101,7 @@ class Transformer(nn.Module):
             inp), '(t bs) d -> t bs d', t=seq_len, bs=bs)
 
         src_mask = self.generate_square_subsequent_mask(seq_len, device)
-
         outp = self.forward_transformer(inp, src_mask=src_mask)
-
         outp = self.dec_linear(outp)
 
         return outp

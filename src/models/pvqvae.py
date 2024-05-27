@@ -25,7 +25,7 @@ class PVQVAE(BaseModel):
         self.quantize = VectorQuantizer(
             n_e=self.n_embed, e_dim=self.embed_dim, beta=1.0)
         self.configs = configs
-        self.cur_bs = 4
+        self.cur_bs = 8
         self.quant_conv = nn.Conv3d(
             in_channels=self.encoder.out_channels, out_channels=self.embed_dim, kernel_size=1)
 
@@ -183,3 +183,13 @@ class PVQVAE(BaseModel):
         ret = self.quantize.embedding.cpu().state_dict()
         self.quantize.embedding.cuda()
         return ret
+
+    def decode_enc_idices(self, enc_indices, z_spatial_dim=8):
+
+        # for transformer
+        enc_indices = rearrange(enc_indices, 't bs -> (bs t)')
+        z_q = self.quantize.embedding(enc_indices)  # (bs t) zd
+        z_q = rearrange(z_q, '(bs d1 d2 d3) zd -> bs zd d1 d2 d3',
+                        d1=z_spatial_dim, d2=z_spatial_dim, d3=z_spatial_dim)
+        dec = self.decode(z_q)
+        return dec
