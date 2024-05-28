@@ -4,7 +4,7 @@
 training:
   name: pvqVAE
   description: plzWork
-  experiment_id: pvqVAE-RandTransformerTesting # None | A unique id identifying the experiment folder
+  experiment_id: transformerTrain # None | A unique id identifying the experiment folder
   #experiment_id: None
   extra_notes: none
   logs_dir: logs
@@ -39,12 +39,12 @@ training:
   #ckpt_path: logs/vaeLogs/2048LinFullTraining/2024_05_25_17_24_55/checkpoints/epoch-26.ckpt
   #ckpt_path: logs/pvqVAE/pvqVAE-Train/2024_05_26_02_46_01/checkpoints/epoch-114.ckpt # Very Important
   #ckpt_path: logs/pvqVAE/pvqVAE-RandTransformerTrain2/2024_05_27_03_34_37/checkpoints/epoch-500.ckpt
-  ckpt_path: logs/rand_tf-snet_code-all-LR1e-4-clean-epoch200.pth
+  ckpt_path: logs/pvqVAE/transformerTrain/2024_05_28_11_35_43/checkpoints/epoch-latest.ckpt
   use_scheduler: True
   apply_metrics_batch_count: 5 # number of batches to apply additional metrics on
 #2024_05_16_20_23_24 id
 dataset:
-  dataset_field: shape_net_v3_sdf
+  dataset_field: shape_net_code
   path: ../../datasets/shapenet_orig/ShapeNetCore.v2  # For local testing without downloading shape => change to local_raw_dataset/ShapeNet
     # Can be overriden by dataset specific path
   overfit_size: 1
@@ -127,11 +127,11 @@ model:
     model_class: VAE
     metrics: iou,chamferDistance   # None | iou | chamferDistance
     losses: "l2,kl" #additional loss names
-    lr: 1.0e-4
-    criterion: L1
-    base_kl_weight: 0
+    lr: 1.0e-5
+    criterion: MSE
+    base_kl_weight: 1
     reconst_weight: 1 #1
-    scheduler_step_size: 50
+    scheduler_step_size: 10
     scheduler_gamma: 0.5
     cycle_iter: 20000
     stop_cycle_count: 1
@@ -205,7 +205,7 @@ model:
     losses: None #additional loss names
     lr: 1.0e-4
     criterion: L1
-    scheduler_step_size: 50
+    scheduler_step_size: 30
     scheduler_gamma: 0.9
     weight_init: None
     embed_dim: 768

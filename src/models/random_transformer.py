@@ -23,20 +23,20 @@ class RandTransformer(BaseModel):
         self.vqvae = PVQVAE(vqvae_config)
         self.vqvae.load_ckpt(configs['pvqvae']['ckpt_path'])
         self.vqvae.eval()
-        self.vqvae.requires_grad_ = False
 
         n_embed = configs['pvqvae']['n_embed']
         embed_dim = configs['pvqvae']['embed_dim']
 
-        self.tf.codebook = nn.Embedding(n_embed, embed_dim)
-        self.tf.codebook.load_state_dict(
+        self.tf.embedding_encoder = nn.Embedding(n_embed, embed_dim)
+        self.tf.embedding_encoder.load_state_dict(
             self.vqvae.quantize.embedding.state_dict())
-        self.tf.codebook.requires_grad = False
+        self.tf.embedding_encoder.requires_grad = False
+
         self.criterion_ce = nn.CrossEntropyLoss()
         self.optimizer = optim.Adam(
             [p for p in self.tf.parameters() if p.requires_grad == True], lr=configs['lr'])
         self.scheduler = optim.lr_scheduler.StepLR(
-            self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
+            self.optimizer, 30, 0.9)
 
         self.sos = 0
         self.counter = 0
@@ -244,11 +244,14 @@ class RandTransformer(BaseModel):
             self.x_recon_tf = self.vqvae.decode_enc_idices(outp)
             self.x_recon = self.vqvae.decode(
                 self.z_q)
+
         visuals = {
             "reconstructions_tf": self.x_recon_tf,
             "reconstructions_pvqvae": self.x_recon,
             "target": self.x,
         }
+        uncond = self.uncond_gen(2)
+        visuals["generated"] = uncond
         return visuals
 
     def get_batch_input(self, x):
@@ -272,13 +275,15 @@ class RandTransformer(BaseModel):
         # get dummy data
         data = self.get_dummy_input(bs=bs)
         self.inference2(data, seq_len=None, topk=topk)
-
         gen_tf = self.x_recon_tf
         return gen_tf
 
     def load_ckpt(self, ckpt_path):
         self.load_state_dict(torch.load(ckpt_path))
         cprint.info(f"Model loaded from {ckpt_path}")
-        self.tf.codebook.load_state_dict(
+        state_dict = torch.load(self.configs['pvqvae']['ckpt_path'])
+        self.vqvae.load_state_dict(state_dict)
+        self.tf.embedding_encoder.load_state_dict(
             self.vqvae.quantize.embedding.state_dict())
+
         cprint.info(f"VQVAE loaded from {self.configs['pvqvae']['ckpt_path']}")

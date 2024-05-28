@@ -27,7 +27,8 @@ class Transformer(nn.Module):
 
         # Start Token
         self.embedding_start = nn.Embedding(1, vq_embed_dim)
-        self.codebook = nn.Embedding(self.codebook_size, vq_embed_dim)
+        # self.codebook = nn.Embedding(self.codebook_size, vq_embed_dim)
+        self.embedding_encoder = nn.Embedding(self.codebook_size, vq_embed_dim)
 
         self.pos_embedding = PEPixelTransformer(pe_conf=p_encoding_conf)
         self.fuse_linear = nn.Linear(
@@ -52,7 +53,7 @@ class Transformer(nn.Module):
 
         self.embedding_start.weight.data.uniform_(
             -1.0 / self.codebook_size, 1.0 / self.codebook_size)
-        self.codebook.weight.data.uniform_(
+        self.embedding_encoder.weight.data.uniform_(
             -1.0 / self.codebook_size, 1.0 / self.codebook_size)
 
         self.fuse_linear.bias.data.normal_(0, 0.02)
@@ -86,7 +87,7 @@ class Transformer(nn.Module):
         # token embedding
         sos = inp[:1, :]
         inp_tokens = inp[1:, :]
-        inp_val = torch.cat([self.embedding_start(sos), self.codebook(
+        inp_val = torch.cat([self.embedding_start(sos), self.embedding_encoder(
             inp_tokens)], dim=0) * math.sqrt(self.d_tf)
         inp_posn = repeat(self.pos_embedding(inp_posn),
                           't pos_d -> t bs pos_d', bs=bs)

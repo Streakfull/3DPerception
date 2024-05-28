@@ -4,15 +4,17 @@ import torch.nn.functional as F
 
 
 class KLDivergence(nn.Module):
-    def __init__(self, reduction='mean'):
+    def __init__(self, reduction='sum'):
         super(KLDivergence, self).__init__()
         self.reduction = reduction
         # self.kl_loss = nn.KLDivLoss(reduction="batchmean")
 
     def forward(self, mu, logvar):
         try:
+            # loss = -0.5 * torch.sum(1 + logvar.flatten(1) - mu.flatten(1).pow(2) -
+            #                         logvar.flatten(1).exp(), dim=1)
             loss = -0.5 * torch.sum(1 + logvar.flatten(1) - mu.flatten(1).pow(2) -
-                                    logvar.flatten(1).exp(), dim=1)
+                                    logvar.flatten(1).exp())
 
         except:
             loss = torch.ones_like(mu.flatten(1))

@@ -25,7 +25,7 @@ class PVQVAE(BaseModel):
         self.quantize = VectorQuantizer(
             n_e=self.n_embed, e_dim=self.embed_dim, beta=1.0)
         self.configs = configs
-        self.cur_bs = 8
+        # self.cur_bs = 8
         self.quant_conv = nn.Conv3d(
             in_channels=self.encoder.out_channels, out_channels=self.embed_dim, kernel_size=1)
 
