@@ -72,17 +72,18 @@ class Logger:
                 log_file.write('%s\n' % message)
 
     def log_model_summary(self, model, input_shape=(1, 64, 64, 64), batch_size=1):
+        pass
         # return
-        input_shape = (batch_size,) + input_shape
-        params = summarize_model(model)
-        shapes_archi = str(summary(model, input_shape, verbose=0))
-        pytorch_model = str(model)
-        with open(f"{self.experiment_dir}/modelsummary/paramLayers.txt", "w") as params_writer:
-            params_writer.write(params)
-        with open(f"{self.experiment_dir}/modelsummary/output_shapes.txt", "w") as shapes_writer:
-            shapes_writer.write(shapes_archi)
-        with open(f"{self.experiment_dir}/modelsummary/pytorch_model.txt", "w") as model_writer:
-            model_writer.write(pytorch_model)
+        # input_shape = (batch_size,) + input_shape
+        # params = summarize_model(model)
+        # shapes_archi = str(summary(model, input_shape, verbose=0))
+        # pytorch_model = str(model)
+        # with open(f"{self.experiment_dir}/modelsummary/paramLayers.txt", "w") as params_writer:
+        #     params_writer.write(params)
+        # with open(f"{self.experiment_dir}/modelsummary/output_shapes.txt", "w") as shapes_writer:
+        #     shapes_writer.write(shapes_archi)
+        # with open(f"{self.experiment_dir}/modelsummary/pytorch_model.txt", "w") as model_writer:
+        #     model_writer.write(pytorch_model)
 
     def get_experiment_dir(self, config):
         experiment_id = config["experiment_id"]

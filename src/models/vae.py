@@ -169,7 +169,7 @@ class VAE(AutoEncoder):
         visuals = {
             "reconstructions": self.predictions,
             "target": self.target,
-            "samples": self.sample(n_samples=self.predictions.shape[0])[0],
+            "samples": self.sample(n_samples=self.predictions.shape[0]*4)[0],
 
         }
         return visuals

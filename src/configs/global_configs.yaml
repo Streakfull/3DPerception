@@ -2,9 +2,9 @@
 # Add configurations as needed
 
 training:
-  name: VAE10
+  name: VAE11
   description: plzWork
-  experiment_id: 512FullyConvTrainKL1SumCont2.5e # None | A unique id identifying the experiment folder
+  experiment_id: 512FullyConvTrainKL1Sum5ex1 # None | A unique id identifying the experiment folder
   #experiment_id: None
   extra_notes: none
   logs_dir: logs
@@ -23,7 +23,7 @@ training:
   start_iteration: 0
   visualize_every: 200
   apply_metrics_every: 1480
-  load_ckpt: True
+  load_ckpt: False
   #ckpt_path: logs/0.2ClampFullTraining/NOKL-SamplingApplied/2024_05_17_23_36_33/checkpoints/epoch-20.ckpt
   #ckpt_path: logs/0.2ClampFullTrainingSmallLatentSpace/KL-SamplingAppliedContinueEpoch20FrozenEncoder/2024_05_18_13_00_25/checkpoints/epoch-2.ckpt
   #ckpt_path: logs/vaeTrain/fullyConv/2024_05_17_04_07_52/checkpoints/epoch-60.ckpt
@@ -131,8 +131,8 @@ model:
     losses: "l2,kl" #additional loss names
     lr: 1.0e-4
     criterion: L1
-    base_kl_weight: 2.5e-4
-    reconst_weight: 1.0e-4 #1
+    base_kl_weight: 2.2e-3
+    reconst_weight: 1.0e-3 #1
     scheduler_step_size: 35
     scheduler_gamma: 0.5
     cycle_iter: 20000
