@@ -14,7 +14,7 @@ class KLDivergence(nn.Module):
             # loss = -0.5 * torch.sum(1 + logvar.flatten(1) - mu.flatten(1).pow(2) -
             #                         logvar.flatten(1).exp(), dim=1)
             loss = -0.5 * torch.sum(1 + logvar.flatten(1) - mu.flatten(1).pow(2) -
-                                    logvar.flatten(1).exp())
+                                    logvar.flatten(1).exp(), dim=1)
 
         except:
             loss = torch.ones_like(mu.flatten(1))

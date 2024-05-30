@@ -230,6 +230,7 @@ class VAE3D(BaseModel):
     def init_weights(self):
         init_type = self.configs['weight_init']
         gain = self.configs['gain']
+        init_weights(self, init_type=init_type, gain=gain)
         init_weights(self.encoder, init_type=init_type, gain=gain)
         init_weights(self.decoder, init_type=init_type, gain=gain)
         init_weights(self.encfc1, init_type=init_type, gain=gain)

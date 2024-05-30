@@ -75,12 +75,12 @@ class Logger:
         # return
         input_shape = (batch_size,) + input_shape
         params = summarize_model(model)
-        # shapes_archi = str(summary(model, input_shape, verbose=0))
+        shapes_archi = str(summary(model, input_shape, verbose=0))
         pytorch_model = str(model)
         with open(f"{self.experiment_dir}/modelsummary/paramLayers.txt", "w") as params_writer:
             params_writer.write(params)
-        # with open(f"{self.experiment_dir}/modelsummary/output_shapes.txt", "w") as shapes_writer:
-        #     shapes_writer.write(shapes_archi)
+        with open(f"{self.experiment_dir}/modelsummary/output_shapes.txt", "w") as shapes_writer:
+            shapes_writer.write(shapes_archi)
         with open(f"{self.experiment_dir}/modelsummary/pytorch_model.txt", "w") as model_writer:
             model_writer.write(pytorch_model)
 
