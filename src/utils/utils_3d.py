@@ -160,7 +160,13 @@ def sdf_to_mesh(sdf, level=0.02, color=None, render_all=False):
         # verts_i, faces_i = mcubes.marching_cubes(sdf_i, 0.02)
         verts_i, faces_i = mc.marching_cubes(sdf_i, level)
         verts_i = verts_i / n_cell - .5
-
+        verts_i[:, [0, 1, 2]] = verts_i[:, [2, 1, 0]]
+        rot_func = RotateAxisAngle(-45, "Y", device="cpu")
+        verts_i = rot_func.transform_points(
+            torch.Tensor(verts_i)).detach().cpu().numpy()
+        # verts_i[:, 0] = verts_i[:, 0]*-1
+        # verts_i[:, 2] = verts_i[:, 2]*-1
+        # verts_i[:, 1] = verts_i[:, 1]*-1
         verts_i = torch.from_numpy(verts_i).float().to(device)
         # verts_i[:, 0] = verts_i[:, 0]*-1
         # verts_i[:, 2] = verts_i[:, 2]*-1

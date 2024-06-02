@@ -54,6 +54,7 @@ class VAE(AutoEncoder):
             self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
 
         self.kl = KLDivergence()
+        self.norm_in_encoder = Normalize(64)
 
     @ property
     def is_vae(self):
@@ -64,6 +65,7 @@ class VAE(AutoEncoder):
     def forward(self, x):
         self.target = x
         x = self.encoder(x)
+        x = self.norm_in_encoder(x)
         self.mu = self.conv_mu(x)
         self.mu = self.norm_mu(self.mu)
         # self.mu = self.linear_mu_in(self.mu.flatten(1))

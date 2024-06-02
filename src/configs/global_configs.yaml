@@ -4,7 +4,7 @@
 training:
   name: VAEPlzWork
   description: plzWork2
-  experiment_id: 512FullyConvTrainKL1Sum4ex1 # None | A unique id identifying the experiment folder
+  experiment_id: 512FullyConvTrainKL1Sum35ex0.75 # None | A unique id identifying the experiment folder
   #experiment_id: None
   extra_notes: none
   logs_dir: logs
@@ -131,8 +131,8 @@ model:
     losses: "l2,kl" #additional loss names
     lr: 1.0e-4
     criterion: L1
-    base_kl_weight: 4.0e-3
-    reconst_weight: 1.0e-3 #1
+    base_kl_weight: 48.0e-3
+    reconst_weight: 0.7e-3 #1
     scheduler_step_size: 35
     scheduler_gamma: 0.5
     cycle_iter: 20000
