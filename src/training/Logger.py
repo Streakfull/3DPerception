@@ -73,7 +73,7 @@ class Logger:
 
     def log_model_summary(self, model, input_shape=(1, 64, 64, 64), batch_size=1):
         # pass
-        # return
+       # return
         input_shape = (batch_size,) + input_shape
         params = summarize_model(model)
         shapes_archi = str(summary(model, input_shape, verbose=0))

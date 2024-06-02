@@ -4,7 +4,7 @@
 training:
   name: VAEPlzWork
   description: plzWork2
-  experiment_id: 512FullyConvTrainKL1Sum35ex0.75 # None | A unique id identifying the experiment folder
+  experiment_id: 256x2.2e-4x1e-4 # None | A unique id identifying the experiment folder
   #experiment_id: None
   extra_notes: none
   logs_dir: logs
@@ -117,7 +117,7 @@ model:
     auto_encoder_networks:
       in_channels: 1
       out_channels: 64
-      ch_mult: [1, 2, 2, 4]
+      ch_mult: [1, 2, 2, 2, 4]
       num_res_blocks: 1
       attn_resolutions: [8]
       dropout: 0.0
@@ -131,8 +131,8 @@ model:
     losses: "l2,kl" #additional loss names
     lr: 1.0e-4
     criterion: L1
-    base_kl_weight: 48.0e-3
-    reconst_weight: 0.7e-3 #1
+    base_kl_weight: 2.2e-4
+    reconst_weight: 1.0e-4 #1
     scheduler_step_size: 35
     scheduler_gamma: 0.5
     cycle_iter: 20000
@@ -143,7 +143,7 @@ model:
     auto_encoder_networks:
       in_channels: 1
       out_channels: 64
-      ch_mult: [1, 2, 2, 4]
+      ch_mult: [1, 2, 2, 2,4]
       num_res_blocks: 1
       attn_resolutions: [8]
       dropout: 0.0
@@ -169,8 +169,8 @@ model:
     gain: 0.02
     auto_encoder_networks:
       in_channels: 1
-      out_channels: 64
-      ch_mult: [1, 2, 2, 4]
+      out_channels: 32
+      ch_mult: [1, 2, 2,2,2]
       num_res_blocks: 1
       attn_resolutions: [8]
       dropout: 0.0

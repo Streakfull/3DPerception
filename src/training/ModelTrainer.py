@@ -74,6 +74,7 @@ class ModelTrainer:
         for batch_idx, batch in enumartion:
             # for batch_idx, batch in enumerate(self.train_dataloader):
             self.model.train()
+            # torch.cuda.empty_cache()
             iteration = epoch * len(self.train_dataloader) + batch_idx
             if iteration < self.train_vars.start_iteration:
                 continue

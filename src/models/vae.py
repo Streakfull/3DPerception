@@ -54,7 +54,7 @@ class VAE(AutoEncoder):
             self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
 
         self.kl = KLDivergence()
-        self.norm_in_encoder = Normalize(64)
+        self.norm_in_encoder = Normalize(self.encoder.out_channels)
 
     @ property
     def is_vae(self):
@@ -65,9 +65,12 @@ class VAE(AutoEncoder):
     def forward(self, x):
         self.target = x
         x = self.encoder(x)
+        # import pdb
+        # pdb.set_trace()
         x = self.norm_in_encoder(x)
         self.mu = self.conv_mu(x)
         self.mu = self.norm_mu(self.mu)
+
         # self.mu = self.linear_mu_in(self.mu.flatten(1))
         # self.mu = self.norm_linear_mu_in(self.mu)
         # self.mu = nonlinearity(self.mu)
@@ -160,7 +163,7 @@ class VAE(AutoEncoder):
     def sample(self, n_samples=1, device="cuda:0"):
         self.eval()
         with torch.no_grad():
-            z = torch.randn(size=(n_samples, 1, 8, 8, 8)).to(device=device)
+            z = torch.randn(size=(n_samples, 1, 4, 4, 4)).to(device=device)
             out = self.decode(z)
             return out, z
 
