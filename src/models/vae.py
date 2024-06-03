@@ -42,17 +42,17 @@ class VAE(AutoEncoder):
         )
 
         self.norm_conv_in = Normalize(1)
-        self.linear_mu = nn.Linear(in_features=256, out_features=128)
+        self.linear_mu = nn.Linear(in_features=512, out_features=128)
         self.norm_mu = nn.InstanceNorm1d(4, affine=True)
-        self.linear_logvar = nn.Linear(in_features=256, out_features=128)
+        self.linear_logvar = nn.Linear(in_features=512, out_features=128)
         self.norm_log_var = nn.InstanceNorm1d(4, affine=True)
 
-        self.linear_out = nn.Linear(in_features=128, out_features=256)
+        self.linear_out = nn.Linear(in_features=128, out_features=512)
         self.dec_in = nn.Conv3d(
             in_channels=1, out_channels=self.encoder.out_channels, kernel_size=1)
 
-        self.norm_mu = Normalize(1)
-        self.norm_log_var = Normalize(1)
+        # self.norm_mu = Normalize(1)
+        # self.norm_log_var = Normalize(1)
         # self.norm_z_out = nn.InstanceNorm1d(512)
 
         # self.norm_mu = nn.InstanceNorm1d(512, affine=True)
@@ -79,9 +79,9 @@ class VAE(AutoEncoder):
         x = self.conv_in(x)
         x = self.norm_conv_in(x)
         x = nonlinearity(x)
-        import pdb
-        pdb.set_trace()
+
         x = x.flatten(1)
+
         self.mu = self.linear_mu(x)
         self.mu = self.norm_mu(self.mu)
 
