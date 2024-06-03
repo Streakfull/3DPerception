@@ -91,7 +91,7 @@ dataset:
     path: src/raw_dataset/ShapeNetDISN/SDF_v1_64
 
 model:
-  model_field:  globalPVQVAE
+  model_field:  vae
   dummy_classifier:
     model_filepath: models/dummy_classifier.py
     model_class: DummyClassifier
@@ -131,8 +131,8 @@ model:
     losses: "l2,kl" #additional loss names
     lr: 1.0e-4
     criterion: L1
-    base_kl_weight: 10.0e-4
-    reconst_weight: 1.0e-4 #1
+    base_kl_weight: 1.0e-4
+    reconst_weight: 1.0 #1
     scheduler_step_size: 35
     scheduler_gamma: 0.5
     cycle_iter: 20000
@@ -143,7 +143,7 @@ model:
     auto_encoder_networks:
       in_channels: 1
       out_channels: 64
-      ch_mult: [1, 2, 2, 4]
+      ch_mult: [1, 2, 2, 2, 2]
       num_res_blocks: 1
       attn_resolutions: [8]
       dropout: 0.0
@@ -170,7 +170,7 @@ model:
     auto_encoder_networks:
       in_channels: 1
       out_channels: 32
-      ch_mult: [1, 2, 2,2,2]
+      ch_mult: [1, 2, 2,2, 2]
       num_res_blocks: 1
       attn_resolutions: [8]
       dropout: 0.0
