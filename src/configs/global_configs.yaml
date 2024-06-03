@@ -4,7 +4,7 @@
 training:
   name: GlobalPVQVAE
   description: plzWork2
-  experiment_id: Dev # None | A unique id identifying the experiment folder
+  experiment_id: FullTrain # None | A unique id identifying the experiment folder
   #experiment_id: None
   extra_notes: none
   logs_dir: logs

@@ -60,8 +60,6 @@ class GlobalPVQVAE(BaseModel):
 
     def encode(self, x):
         h = self.encoder(x)
-        import pdb
-        pdb.set_trace()
         h = self.quant_conv(h)
         quant, emb_loss, info = self.quantize(h, is_voxel=True)
         return quant, emb_loss, info
@@ -97,7 +95,7 @@ class GlobalPVQVAE(BaseModel):
         self.train()
         self.zq_cubes, self.qloss, _ = self.encode(
             x)
-        self.x_recon = self.decode(self.zq_voxels)
+        self.x_recon = self.decode(self.zq_cubes)
         return self.x_recon
 
     def inference(self, data):
