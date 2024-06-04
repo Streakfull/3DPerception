@@ -37,19 +37,9 @@ class VAE(AutoEncoder):
         # self.linear_z_out = nn.Linear(
         # in_features=256, out_features=512)
         # self.norm_linear_mu_out = nn.InstanceNorm1d(256)
-        self.conv_in = nn.Conv3d(
-            in_channels=self.encoder.out_channels, out_channels=1, kernel_size=1
-        )
 
-        self.norm_conv_in = Normalize(1)
-        # self.linear_mu = nn.Linear(in_features=512, out_features=128)
-        # self.norm_mu = nn.InstanceNorm1d(4, affine=True)
-        # self.linear_logvar = nn.Linear(in_features=512, out_features=128)
-        # self.norm_log_var = nn.InstanceNorm1d(4, affine=True)
-
-        # self.linear_out = nn.Linear(in_features=128, out_features=512)
         self.dec_in = nn.Conv3d(
-            in_channels=1, out_channels=self.encoder.out_channels, kernel_size=1)
+            in_channels=1, out_channels=75, kernel_size=1)
 
         self.norm_mu = Normalize(1)
         self.norm_log_var = Normalize(1)
@@ -59,7 +49,7 @@ class VAE(AutoEncoder):
         # self.norm_log_var = nn.InstanceNorm1d(512, affine=True)
 
         self.optimizer = optim.Adam(
-            params=self.parameters(), lr=configs["lr"])
+            params=self.parameters(), lr=configs["lr"], betas=(0.5, 0.9))
         self.scheduler = optim.lr_scheduler.StepLR(
             self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
 
@@ -75,9 +65,15 @@ class VAE(AutoEncoder):
     def forward(self, x):
         self.target = x
         x = self.encoder(x)
+        # import pdb
+        # pdb.set_trace()
         x = self.norm_in_encoder(x)
         self.mu = self.conv_mu(x)
-        self.mu = self.norm_mu(x)
+        self.mu = self.norm_mu(self.mu)
+
+        # self.mu = self.linear_mu_in(self.mu.flatten(1))
+        # self.mu = self.norm_linear_mu_in(self.mu)
+        # self.mu = nonlinearity(self.mu)
 
         if (self.is_vae):
             if (self.training):
@@ -93,8 +89,7 @@ class VAE(AutoEncoder):
 
         else:
             z = self.mu
-        import pdb
-        pdb.set_trace()
+
         x = self.decode(z)
         self.predictions = x
 
@@ -103,8 +98,6 @@ class VAE(AutoEncoder):
     def decode(self, z):
         # z = self.linear_z_out(z)
         # z = self.norm_z_out(z)
-        # z = rearrange(z, 'bs (ch l w h)->bs ch l w h', ch=1, l=8, w=8, h=8)
-        # z = self.linear_out(z)
         # z = rearrange(z, 'bs (ch l w h)->bs ch l w h', ch=1, l=8, w=8, h=8)
         z = self.dec_in(z)
         x = self.decoder(z)
@@ -125,7 +118,7 @@ class VAE(AutoEncoder):
             self.kl_loss = torch.tensor(0, device=self.predictions.device)
 
         self.loss = (self.reconst_weight*self.reconst_loss) + \
-            (self.kl_weight*self.kl_loss*(1/4))
+            (self.kl_weight*self.kl_loss)
 
         # self.loss = (self.reconst_weight * self.reconst_loss) + \
         #     (self.kl_weight*self.kl_loss)
@@ -145,7 +138,8 @@ class VAE(AutoEncoder):
         if (self.iteration//self.stop_cycle_count) >= 1 or current_iteration == 0:
             self.kl_weight = 1
         # self.kl_weight /= (self.encoder_channels * 8 * 8 * 8)
-        self.kl_weight = self.base_kl_weight * self.kl_weight
+        # self.kl_weight = self.base_kl_weight * self.kl_weight
+        self.kl_weight = self.base_kl_weight
 
     def get_metrics(self):
         return {'loss': self.loss.data, 'l2': self.reconst_loss.data, 'kl': self.kl_loss.data, 'signedIou': 0}
@@ -161,10 +155,10 @@ class VAE(AutoEncoder):
         super().init_weights()
         init_type = self.configs['weight_init']
         gain = self.configs['gain']
-
-        init_weights(self.conv_in, init_type=init_type, gain=gain)
         init_weights(self.conv_mu, init_type=init_type, gain=gain)
-        init_weights(self.conv_logvar, init_type=init_type, gain=gain)
+
+        if (self.is_vae):
+            init_weights(self.conv_logvar, init_type=init_type, gain=gain)
 
     def sample(self, n_samples=1, device="cuda:0"):
         self.eval()

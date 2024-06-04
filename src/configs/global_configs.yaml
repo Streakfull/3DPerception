@@ -2,9 +2,9 @@
 # Add configurations as needed
 
 training:
-  name: GlobalPVQVAE
+  name: 64VAE
   description: plzWork2
-  experiment_id: FullTrain # None | A unique id identifying the experiment folder
+  experiment_id: FullTrainSumKL3,5e-4 # None | A unique id identifying the experiment folder
   #experiment_id: None
   extra_notes: none
   logs_dir: logs
@@ -131,9 +131,9 @@ model:
     losses: "l2,kl" #additional loss names
     lr: 1.0e-4
     criterion: L1
-    base_kl_weight: 1.0e-4
+    base_kl_weight: 3.5e-4
     reconst_weight: 1.0 #1
-    scheduler_step_size: 35
+    scheduler_step_size: 30
     scheduler_gamma: 0.5
     cycle_iter: 20000
     stop_cycle_count: 1
@@ -143,7 +143,7 @@ model:
     auto_encoder_networks:
       in_channels: 1
       out_channels: 64
-      ch_mult: [1, 2, 2, 2, 2]
+      ch_mult: [1, 2, 2, 2, 4]
       num_res_blocks: 1
       attn_resolutions: [8]
       dropout: 0.0
