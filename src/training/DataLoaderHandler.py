@@ -34,7 +34,7 @@ class DataLoaderHandler:
         self.validation_dataloader = DataLoader(
             valid_ds,
             batch_size=batch_size,
-            shuffle=True,
+            shuffle=False,
             num_workers=num_workers,  # Data is usually loaded in parallel by num_workers
             pin_memory=True,
             # This is an implementation detail to speed up data uploading to the GPU

@@ -29,3 +29,6 @@ class SignedIou(BaseMetric):
         union = rearrange(union, 'b ch d h w -> b (ch d h w)')
         iou = inter.sum(1) / (union.sum(1) + 1e-12)
         return iou.mean()
+
+    def calc_batch(self, pred, target):
+        return self.calc(pred, target)

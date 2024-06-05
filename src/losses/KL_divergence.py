@@ -10,14 +10,12 @@ class KLDivergence(nn.Module):
         # self.kl_loss = nn.KLDivLoss(reduction="batchmean")
 
     def forward(self, mu, logvar):
-        try:
-            # loss = -0.5 * torch.sum(1 + logvar.flatten(1) - mu.flatten(1).pow(2) -
-            #                         logvar.flatten(1).exp(), dim=1)
-            loss = -0.5 * torch.sum(1 + logvar.flatten(1) - mu.flatten(1).pow(2) -
-                                    logvar.flatten(1).exp(), dim=1)
 
-        except:
-            loss = torch.ones_like(mu.flatten(1))
+        # loss = -0.5 * torch.sum(1 + logvar.flatten(1) - mu.flatten(1).pow(2) -
+        #                         logvar.flatten(1).exp(), dim=1)
+        loss = -0.5 * torch.sum(1 + logvar.flatten(1) - mu.flatten(1).pow(2) -
+                                logvar.flatten(1).exp(), dim=1)
+
         # loss = loss / mu.flatten(1).shape[1]
         if self.reduction == 'mean':
             return torch.mean(loss, dim=0)

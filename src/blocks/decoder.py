@@ -15,10 +15,11 @@ class Decoder(nn.Module):
         self.num_resolutions = len(ch_mult)
         self.num_res_blocks = num_res_blocks
         self.resolution = resolution
-        # self.in_channels = in_channels
-        self.in_channels = 75
+        self.in_channels = in_channels
+        # self.in_channels = 75
         # block_in = 64*ch_mult[self.num_resolutions-1]
-        block_in = 92*ch_mult[self.num_resolutions-1]
+        # block_in = 64*ch_mult[self.num_resolutions-1]
+        block_in = self.in_channels
         curr_res = resolution // 2**(self.num_resolutions-1)
         self.z_shape = (1, self.in_channels, curr_res, curr_res, curr_res)
         self.sigmoid = nn.Sigmoid()
@@ -76,7 +77,7 @@ class Decoder(nn.Module):
                                         kernel_size=3,
                                         stride=1,
                                         padding=1)
-        self.norm_out_2 = Normalize(1)
+        # self.norm_out_2 = Normalize(1)
 
     def forward(self, z):
         # assert z.shape[1:] == self.z_shape[1:]

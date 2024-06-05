@@ -349,7 +349,7 @@ def save_mesh_as_gif(mesh_renderer, mesh, nrow=3, out_name='1.gif'):
 
         rot_comb_img.append(img_grid_i)
 
-    with imageio.get_writer(out_name, mode='I', duration=.08) as writer:
+    with imageio.get_writer(out_name, mode='I', duration=.01) as writer:
 
         # combine them according to nrow
         for rot in rot_comb_img:

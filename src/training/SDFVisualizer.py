@@ -5,7 +5,7 @@ from einops import rearrange
 
 class SDFVisualizer:
 
-    def __init__(self, device, output_path, key, epoch, iteration, logger):
+    def __init__(self, device, output_path, key, epoch, iteration, logger=None):
         dist, elev, azim = 1.7, 20, 20
         self.render = init_mesh_renderer(
             image_size=256, dist=dist, elev=elev, azim=azim, device=device)
@@ -18,7 +18,7 @@ class SDFVisualizer:
     def visualize(self, sdf):
         im, mesh = render_sdf(self.render, sdf)
         self.handle_images(im)
-        self.handle_gif(mesh)
+        # self.handle_gif(mesh)
 
     def handle_images(self, images):
         imgs = tensor2im(images)
@@ -27,8 +27,9 @@ class SDFVisualizer:
         images = images[:, 0:3, :, :]
         images = rearrange(images, 'bs ch w h->bs w h ch')
         images = images + 1 / (2.0*255.)
-        self.logger.log_image(
-            f"Train/{self.key}", images, self.iteration)
+        if (self.logger is not None):
+            self.logger.log_image(
+                f"Train/{self.key}", images, self.iteration)
  # for i in range(images.shape[0]):
         #     self.logger.log_image(
         #         f"Train/{self.key}", images[i].squeeze(), self.iteration+i)

@@ -39,7 +39,7 @@ class PVQVAE(BaseModel):
             self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
         self.criterion = VQLoss()
         self.resolution = configs["auto_encoder_networks"]["resolution"]
-
+        self.cur_bs = 16
         # setup hyper-params
         nC = self.resolution
         self.cube_size = 2 ** self.n_down  # patch_size
