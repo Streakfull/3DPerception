@@ -13,14 +13,16 @@ class ShapeNetCode(BaseShapeNet):
     def __getitem__(self, index):
         shape_key, class_index, class_name, id = super().__getitem__(index)
         sdf = self.get_shape_sdf(shape_key)
-        code, code_ix = self.get_codes(shape_key)
+        code, code_ix, code_global, code_ix_global = self.get_codes(shape_key)
         return {
             "sdf": sdf[np.newaxis, :, :, :],
             "label": class_index,
             "class_name": class_name,
             "id": id,
             "z_q": code,
-            "idx": code_ix
+            "idx": code_ix,
+            "z_q_global": code_global,
+            "idx_global": code_ix_global
         }
 
     @staticmethod
@@ -32,7 +34,11 @@ class ShapeNetCode(BaseShapeNet):
     def get_codes(self, shape_key):
         code_ix = np.load(f"{self.dataset_path}/{shape_key}/codeix.npy")
         code = np.load(f"{self.dataset_path}/{shape_key}/code.npy")
-        return code, code_ix
+        code_ix_global = np.load(
+            f"{self.dataset_path}/{shape_key}/global_codeix.npy")
+        code_global = np.load(
+            f"{self.dataset_path}/{shape_key}/global_code.npy")
+        return code, code_ix, code_global, code_ix_global,
 
     def get_shape_sdf(self, shapenet_key):
         sdf = ShapeNetV3SDF.read_sdf(

@@ -28,6 +28,7 @@ class DataLoaderHandler:
             pin_memory=True,
             # This is an implementation detail to speed up data uploading to the GPU
             drop_last=not global_dataset_config["is_overfit"],
+            # drop_last=False
 
         )
 
@@ -39,6 +40,7 @@ class DataLoaderHandler:
             pin_memory=True,
             # This is an implementation detail to speed up data uploading to the GPU
             drop_last=not global_dataset_config["is_overfit"]
+            # drop_last=False
 
         )
 

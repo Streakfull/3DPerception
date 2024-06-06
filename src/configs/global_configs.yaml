@@ -2,7 +2,7 @@
 # Add configurations as needed
 
 training:
-  name: presentationModelComparison
+  name: vaeRecap2
   description: plzWork2
   experiment_id: Dev # None | A unique id identifying the experiment folder
   #experiment_id: None
@@ -10,15 +10,15 @@ training:
   logs_dir: logs
   is_train: true
   device: cuda:0
-  batch_size: 16
+  batch_size: 4
   num_workers: 16
   test_size: 0.1
   n_epochs: 50000
   append_loss_every: 50
   print_every: 10
-  validate_every: 1480
-  save_every: 1480
-  save_every_nepochs: 5
+  validate_every: 8620
+  save_every: 8620
+  save_every_nepochs: 2
   start_epoch: 0
   start_iteration: 0
   visualize_every: 200
@@ -28,9 +28,10 @@ training:
   #ckpt_path: logs/pvqVAE/pvqVAE-Train/2024_05_26_02_46_01/checkpoints/epoch-114.ckpt # PatchedPVQVAE
   #ckpt_path: logs/pvqVAE/pvqVAE-RandTransformerTrain2/2024_05_27_03_34_37/checkpoints/epoch-500.ckpt #16bs tran
   #ckpt_path: logs/pvqVAE/transformerTrain/2024_05_28_11_35_43/checkpoints/epoch-latest.ckpt #8bs Trans
-  ckpt_path: logs/DisnDatasetTraining/2024_05_09_03_55_02/checkpoints/epoch-116.ckpt #Auto Encoder
-  #ckpt_path: logs/GlobalPVQVAE/FullTrain/2024_06_03_12_37_19/checkpoints/epoch-latest.ckpt
+  #ckpt_path: logs/DisnDatasetTraining/2024_05_09_03_55_02/checkpoints/epoch-116.ckpt #Auto Encoder
+  ckpt_path: logs/GlobalPVQVAE/FullTrain/2024_06_03_12_37_19/checkpoints/epoch-latest.ckpt #Global
   #ckpt_path: logs/imp_experiments/2024_05_09_03_55_02/checkpoints/epoch-124.ckpt
+  ckpt_path: logs/VAEPlzWork/128x10e-4x1e-4/2024_06_02_23_35_18/checkpoints/epoch-latest.ckpt
   use_scheduler: True
   apply_metrics_batch_count: 5 # number of batches to apply additional metrics on
 #2024_05_16_20_23_24 id
@@ -80,7 +81,7 @@ dataset:
     path: src/raw_dataset/ShapeNetDISN/SDF_v1_64
 
 model:
-  model_field:  auto_encoder
+  model_field:  vae
   dummy_classifier:
     model_filepath: models/dummy_classifier.py
     model_class: DummyClassifier
@@ -120,12 +121,12 @@ model:
     losses: "l1,kl,kl_weight" #additional loss names
     lr: 1.0e-4
     criterion: L1
-    base_kl_weight: 1.0e-4
-    reconst_weight: 1.0 #1
+    base_kl_weight: 1.4e-3
+    reconst_weight: 1.0e-4 #1
     scheduler_step_size: 30
     scheduler_gamma: 0.5
     cycle_iter: 15000
-    stop_cycle_count: 45000
+    stop_cycle_count: 60000
    #stop_cycle_count: 1
     weight_init: normal    #None | normal | xavier | xavier_uniform | kaiming | orthogonal
     gain: 0.02

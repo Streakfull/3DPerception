@@ -61,12 +61,12 @@ class ExtractSnetIndices:
                     batch, self.device)
                 sdf = self.model.get_batch_input(batch)
                 self.model.inference(sdf)
-                _, z_q, info = self.model.x_recon, self.model.zq_voxels, self.model.info
+                _, z_q, info = self.model.x_recon, self.model.zq_cubes, self.model.info
                 z_q_indices = info[-1]
                 batch_size = z_q.shape[0]
                 d, h, w = z_q.shape[-3:]
-                z_q_indices = rearrange(
-                    z_q_indices.squeeze(), '(b d h w) -> b d h w', b=batch_size, d=d, h=h, w=w)
+                # z_q_indices = rearrange(
+                #     z_q_indices.squeeze(), '(b d h w) -> b d h w', b=batch_size, d=d, h=h, w=w)
                 out = self.model.decode_from_quant(z_q_indices)
                 z_q = z_q.detach().cpu().numpy()
                 z_q_indices = z_q_indices.detach().cpu().numpy()
@@ -74,8 +74,8 @@ class ExtractSnetIndices:
                     z_q_i = z_q[i]
                     z_q_indices_i = z_q_indices[i]
                     base_path = batch["path"][i]
-                    np.save(f"{base_path}/code.npy", z_q_i)
-                    np.save(f"{base_path}/codeix.npy", z_q_indices_i)
+                    np.save(f"{base_path}/global_code.npy", z_q_i)
+                    np.save(f"{base_path}/global_codeix.npy", z_q_indices_i)
 
     def _set_device(self):
         self.device = torch.device('cpu')
