@@ -2,15 +2,15 @@
 # Add configurations as needed
 
 training:
-  name: vaeKosmoBa2a
+  name: vaeKosmomeinOmo
   description: plzWork2
-  experiment_id: Chairs256ConvLinearMUCalc # None | A unique id identifying the experiment folder
+  experiment_id: CarsDev # None | A unique id identifying the experiment folder
   #experiment_id: None
   extra_notes: none
   logs_dir: logs
   is_train: true
   device: cuda:0
-  batch_size: 16
+  batch_size: 4
   num_workers: 16
   test_size: 0.1
   n_epochs: 50000
@@ -23,7 +23,7 @@ training:
   start_iteration: 0
   visualize_every: 200
   apply_metrics_every: 1480
-  load_ckpt: True
+  load_ckpt: False
   #ckpt_path: logs/VaeTry2/8*8*8**FullTrain/2024_05_21_03_41_13/checkpoints/epoch-74.ckpt
   #ckpt_path: logs/pvqVAE/pvqVAE-Train/2024_05_26_02_46_01/checkpoints/epoch-114.ckpt # PatchedPVQVAE
   #ckpt_path: logs/pvqVAE/pvqVAE-RandTransformerTrain2/2024_05_27_03_34_37/checkpoints/epoch-500.ckpt #16bs tran
@@ -123,7 +123,7 @@ model:
     losses: "l1,kl,kl_weight" #additional loss names
     lr: 4.5e-6
     criterion: L1
-    base_kl_weight: 1.4e-3
+    base_kl_weight: 1.56e-4
     reconst_weight: 1.0e-4 #1
     scheduler_step_size: 30
     scheduler_gamma: 0.5

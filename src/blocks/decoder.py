@@ -51,10 +51,10 @@ class Decoder(nn.Module):
         for i_level in reversed(range(self.num_resolutions)):
             block = nn.ModuleList()
             attn = nn.ModuleList()
-            block_out = 72*(max(ch_mult[i_level]-1, 1))
+            block_out = 64*(max(ch_mult[i_level]-1, 1))
             # for i_block in range(self.num_res_blocks+1):
             # change this to align with encoder
-            for i_block in range(self.num_res_blocks+1):
+            for i_block in range(self.num_res_blocks):
                 block.append(ResnetBlock(in_channels=block_in,
                                          out_channels=block_out,
                                          dropout=dropout))

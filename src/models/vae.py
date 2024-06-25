@@ -24,22 +24,15 @@ class VAE(AutoEncoder):
         self.embed_dim = 512
 
         self.conv_in = nn.Conv3d(
-            in_channels=self.encoder.out_channels, out_channels=1, kernel_size=1)
-        self.norm_conv_in = Normalize(1)
-
-        self.linear_mu = nn.Linear(in_features=512, out_features=256)
-        self.linear_logvar = nn.Linear(in_features=512, out_features=256)
-
-        self.linear_out = nn.Linear(
-            in_features=256, out_features=512)
-
-        # self.norm_linear_mu_out = nn.InstanceNorm1d(256)
+            in_channels=self.encoder.out_channels, out_channels=8, kernel_size=1)
 
         self.dec_in = nn.Conv3d(
-            in_channels=1, out_channels=self.encoder.out_channels, kernel_size=1)
+            in_channels=4, out_channels=self.encoder.out_channels, kernel_size=1)
 
-        self.norm_mu = nn.LayerNorm(256)
-        self.norm_log_var = nn.LayerNorm(256)
+        # self.dec_in = nn.ConvTranspose3d(
+        #     in_channels=512, out_channels=512, kernel_size=4)
+        self.norm_mu = nn.LayerNorm((4, 8, 8, 8))
+        self.norm_log_var = nn.LayerNorm((4, 8, 8, 8))
         # self.norm_z_out = nn.BatchNorm1d(512)
         self.optimizer = optim.Adam(
             params=self.parameters(), lr=configs["lr"], betas=(0.5, 0.9))
@@ -47,7 +40,6 @@ class VAE(AutoEncoder):
             self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
 
         self.kl = KLDivergence()
-        self.norm_in_encoder = Normalize(self.encoder.out_channels)
         # self.norm_z_in = Normalize(64)
         # self.activ = nn.ELU()
 
@@ -60,18 +52,18 @@ class VAE(AutoEncoder):
     def forward(self, x):
         self.target = x
         x = self.encoder(x)
-        x = self.norm_in_encoder(x)
         x = self.conv_in(x)
-        x = self.norm_conv_in(x)
-        x = x.flatten(1)
-        self.mu = self.linear_mu(x)
+        self.mu, self.logvar = torch.chunk(x, chunks=2, dim=1)
         self.mu = self.norm_mu(self.mu)
-        # self.mu = self.conv_in(x)
+        self.logvar = self.norm_log_var(self.logvar)
+        # self.mu = rearrange(
+        #     self.mu, "bs (ch l w h)-> bs ch l w h", ch=4, l=8, w=8, h=8)
+        # self.logvar = rearrange(
+        #     self.logvar, "bs (ch l w h)-> bs ch l w h", ch=4, l=8, w=8, h=8
+        # )
 
         if (self.is_vae):
             if (self.training):
-                self.logvar = self.linear_logvar(x)
-                self.logvar = self.norm_log_var(self.logvar)
                 z = self._reparameterize(self.mu, self.logvar)
             else:
                 self.logvar = torch.zeros_like(self.mu, device=self.mu.device)
@@ -85,12 +77,7 @@ class VAE(AutoEncoder):
         return x
 
     def decode(self, z):
-        z = self.linear_out(z)
-       # z = self.norm_z_out(z)
-        # z = self.activ(z)
-        z = rearrange(z, 'bs (ch l w h)->bs ch l w h', ch=1, l=8, w=8, h=8)
         z = self.dec_in(z)
-        # z = self.norm_z_in(z)
         x = self.decoder(z)
         return x
 
@@ -107,9 +94,9 @@ class VAE(AutoEncoder):
             self.kl_loss = self.kl(self.mu, self.logvar)
         else:
             self.kl_loss = torch.tensor(0, device=self.predictions.device)
-        self.loss = (self.reconst_weight*self.reconst_loss*1/4) + \
-            (self.kl_weight*self.kl_loss)
-
+        # self.loss = (self.reconst_weight*self.reconst_loss*1/4) + \
+        #     (self.kl_weight*self.kl_loss)
+        self.loss = (self.reconst_weight*self.reconst_loss*1/4)
         # self.loss = (self.reconst_weight * self.reconst_loss) + \
         #     (self.kl_weight*self.kl_loss)
 
@@ -146,14 +133,14 @@ class VAE(AutoEncoder):
         init_type = self.configs['weight_init']
         gain = self.configs['gain']
         init_weights(self.conv_in, init_type=init_type, gain=gain)
-        init_weights(self.linear_logvar, init_type=init_type, gain=gain)
-        init_weights(self.linear_mu, init_type=init_type, gain=gain)
-        init_weights(self.linear_out, init_type=init_type, gain=gain)
+        # init_weights(self.linear_logvar, init_type=init_type, gain=gain)
+        # init_weights(self.linear_mu, init_type=init_type, gain=gain)
+        # init_weights(self.linear_out, init_type=init_type, gain=gain)
 
     def sample(self, n_samples=1, device="cuda:0"):
         self.eval()
         with torch.no_grad():
-            z = torch.randn(size=(n_samples, 256)).to(device=device)
+            z = torch.randn(size=(n_samples, 4, 8, 8, 8)).to(device=device)
             out = self.decode(z)
             return out, z
 
