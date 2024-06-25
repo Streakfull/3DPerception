@@ -22,7 +22,7 @@ class Decoder(nn.Module):
         # block_in = self.in_channels
         curr_res = resolution // 2**(self.num_resolutions-1)
         self.z_shape = (1, self.in_channels, curr_res, curr_res, curr_res)
-        self.sigmoid = nn.Sigmoid()
+        self.tanh = nn.Tanh()
         print("Decoding of shape {} = {} dimensions.".format(
             self.z_shape, np.prod(self.z_shape)))
 
@@ -51,7 +51,7 @@ class Decoder(nn.Module):
         for i_level in reversed(range(self.num_resolutions)):
             block = nn.ModuleList()
             attn = nn.ModuleList()
-            block_out = self.in_channels*(max(ch_mult[i_level]-1, 1))
+            block_out = 64*(max(ch_mult[i_level]-1, 1))
             # for i_block in range(self.num_res_blocks+1):
             # change this to align with encoder
             for i_block in range(self.num_res_blocks):
@@ -110,4 +110,5 @@ class Decoder(nn.Module):
         h = self.conv_out(h)
         # h = self.norm_out_2(h)
         # h = self.sigmoid(h)*0.2
+        h = self.tanh(h)*0.2
         return h

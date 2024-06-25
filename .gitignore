@@ -174,3 +174,4 @@ tensorboard.ipynb
 *_local.ipynb
 nohup.out
 src/weights/*
+*_local.py

@@ -23,25 +23,25 @@ class VAE(AutoEncoder):
         self.embed_dim = 512
 
         self.conv_in = nn.Conv3d(
-            in_channels=self.encoder.out_channels, out_channels=1, kernel_size=1)
+            in_channels=self.encoder.out_channels, out_channels=8, kernel_size=1)
         self.norm_conv_in = Normalize(1)
 
-        self.linear_mu = nn.Linear(in_features=512, out_features=128)
-        self.linear_logvar = nn.Linear(in_features=512, out_features=128)
+        # self.linear_mu = nn.Linear(in_features=512, out_features=256)
+        # self.linear_logvar = nn.Linear(in_features=512, out_features=256)
 
-        self.linear_out = nn.Linear(
-            in_features=128, out_features=512)
+        # self.linear_out = nn.Linear(
+        # in_features=256, out_features=512)
 
         # self.norm_linear_mu_out = nn.InstanceNorm1d(256)
 
         self.dec_in = nn.Conv3d(
             in_channels=1, out_channels=self.encoder.out_channels, kernel_size=1)
 
-        self.norm_mu = nn.InstanceNorm1d(4, affine=True)
-        self.norm_log_var = nn.InstanceNorm1d(4, affine=True)
+        self.norm_mu = nn.LayerNorm((4, 8, 8, 8))
+        self.norm_log_var = nn.LayerNorm((4, 8, 8, 8))
         # self.norm_z_out = nn.BatchNorm1d(512)
         self.optimizer = optim.Adam(
-            params=self.parameters(), lr=configs["lr"])
+            params=self.parameters(), lr=configs["lr"], betas=(0.5, 0.9))
         self.scheduler = optim.lr_scheduler.StepLR(
             self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
 
@@ -59,12 +59,13 @@ class VAE(AutoEncoder):
     def forward(self, x):
         self.target = x
         x = self.encoder(x)
-        x = self.norm_in_encoder(x)
+        # x = self.norm_in_encoder(x)
         x = self.conv_in(x)
-        x = self.norm_conv_in(x)
-        x = x.flatten(1)
-        self.mu = self.linear_mu(x)
-        self.mu = self.norm_mu(self.mu)
+        # x = self.norm_conv_in(x)
+        # x = x.flatten(1)
+        # self.mu = self.linear_mu(x)
+        # self.mu = self.norm_mu(self.mu)
+        # self.mu = self.conv_in(x)
 
         if (self.is_vae):
             if (self.training):
@@ -115,22 +116,22 @@ class VAE(AutoEncoder):
 
     def set_kl_weight(self):
         # 14999
-        div = self.iteration / self.cycle_iter
-        current_iteration = 0
-        if (div < 0):
-            current_iteration = self.iteration
-        if (div > 0):
-            current_iteration = self.iteration - \
-                (self.iteration//self.cycle_iter)*self.cycle_iter
-        self.kl_weight = min(current_iteration/(self.cycle_iter*0.5), 1)
-        if (self.iteration//self.stop_cycle_count) >= 1:
-            self.kl_weight = 1
-        self.kl_weight /= (self.encoder_channels * 8 * 8 * 8)
+        # div = self.iteration / self.cycle_iter
+        # current_iteration = 0
+        # if (div < 0):
+        #     current_iteration = self.iteration
+        # if (div > 0):
+        #     current_iteration = self.iteration - \
+        #         (self.iteration//self.cycle_iter)*self.cycle_iter
+        # self.kl_weight = min(current_iteration/(self.cycle_iter*0.5), 1)
+        # if (self.iteration//self.stop_cycle_count) >= 1:
+        #     self.kl_weight = 1
+        # self.kl_weight /= (self.encoder_channels * 8 * 8 * 8)
         # self.kl_weight = self.base_kl_weight * self.kl_weight
         self.kl_weight = self.base_kl_weight
 
     def get_metrics(self):
-        return {'loss': self.loss.data, 'l1': self.reconst_loss.data, 'kl': self.kl_loss.data, 'kl_weight': self.kl_weight}
+        return {'loss': self.loss.data, 'l1': (self.reconst_loss.detach().mean()/64**3)/4, 'kl': self.kl_loss.data, 'kl_weight': self.kl_weight}
 
     def calculate_additional_metrics(self):
         metrics = {}
@@ -151,7 +152,7 @@ class VAE(AutoEncoder):
     def sample(self, n_samples=1, device="cuda:0"):
         self.eval()
         with torch.no_grad():
-            z = torch.randn(size=(n_samples, 128)).to(device=device)
+            z = torch.randn(size=(n_samples, 256)).to(device=device)
             out = self.decode(z)
             return out, z
 
