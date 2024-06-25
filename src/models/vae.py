@@ -9,6 +9,7 @@ from src.metrics.signed_iou import SignedIou
 from torch import optim
 import numpy as np
 from src.blocks.block_utils import Normalize, nonlinearity
+from torch.distributions import MultivariateNormal
 
 
 class VAE(AutoEncoder):
@@ -23,22 +24,22 @@ class VAE(AutoEncoder):
         self.embed_dim = 512
 
         self.conv_in = nn.Conv3d(
-            in_channels=self.encoder.out_channels, out_channels=8, kernel_size=1)
+            in_channels=self.encoder.out_channels, out_channels=1, kernel_size=1)
         self.norm_conv_in = Normalize(1)
 
-        # self.linear_mu = nn.Linear(in_features=512, out_features=256)
-        # self.linear_logvar = nn.Linear(in_features=512, out_features=256)
+        self.linear_mu = nn.Linear(in_features=512, out_features=256)
+        self.linear_logvar = nn.Linear(in_features=512, out_features=256)
 
-        # self.linear_out = nn.Linear(
-        # in_features=256, out_features=512)
+        self.linear_out = nn.Linear(
+            in_features=256, out_features=512)
 
         # self.norm_linear_mu_out = nn.InstanceNorm1d(256)
 
         self.dec_in = nn.Conv3d(
             in_channels=1, out_channels=self.encoder.out_channels, kernel_size=1)
 
-        self.norm_mu = nn.LayerNorm((4, 8, 8, 8))
-        self.norm_log_var = nn.LayerNorm((4, 8, 8, 8))
+        self.norm_mu = nn.LayerNorm(256)
+        self.norm_log_var = nn.LayerNorm(256)
         # self.norm_z_out = nn.BatchNorm1d(512)
         self.optimizer = optim.Adam(
             params=self.parameters(), lr=configs["lr"], betas=(0.5, 0.9))
@@ -59,12 +60,12 @@ class VAE(AutoEncoder):
     def forward(self, x):
         self.target = x
         x = self.encoder(x)
-        # x = self.norm_in_encoder(x)
+        x = self.norm_in_encoder(x)
         x = self.conv_in(x)
-        # x = self.norm_conv_in(x)
-        # x = x.flatten(1)
-        # self.mu = self.linear_mu(x)
-        # self.mu = self.norm_mu(self.mu)
+        x = self.norm_conv_in(x)
+        x = x.flatten(1)
+        self.mu = self.linear_mu(x)
+        self.mu = self.norm_mu(self.mu)
         # self.mu = self.conv_in(x)
 
         if (self.is_vae):
@@ -155,6 +156,15 @@ class VAE(AutoEncoder):
             z = torch.randn(size=(n_samples, 256)).to(device=device)
             out = self.decode(z)
             return out, z
+
+    def sample_normal(self, n_samples=1, mu=0, std=0, device="cuda:0"):
+        self.eval()
+        with torch.no_grad():
+            # z = torch.randn(size=(n_samples, 256)).to(device=device)
+            m = MultivariateNormal(mu, torch.diag(torch.ones_like(mu)))
+            z = m.sample([n_samples])
+            out = self.decode(z)
+            return out
 
     def set_iteration(self, iteration):
         self.iteration = iteration

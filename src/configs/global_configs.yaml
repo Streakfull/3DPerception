@@ -4,13 +4,13 @@
 training:
   name: vaeKosmoBa2a
   description: plzWork2
-  experiment_id: Chairs256ConvLinear # None | A unique id identifying the experiment folder
+  experiment_id: Chairs256ConvLinearMUCalc # None | A unique id identifying the experiment folder
   #experiment_id: None
   extra_notes: none
   logs_dir: logs
   is_train: true
   device: cuda:0
-  batch_size: 4
+  batch_size: 16
   num_workers: 16
   test_size: 0.1
   n_epochs: 50000
@@ -23,7 +23,7 @@ training:
   start_iteration: 0
   visualize_every: 200
   apply_metrics_every: 1480
-  load_ckpt: False
+  load_ckpt: True
   #ckpt_path: logs/VaeTry2/8*8*8**FullTrain/2024_05_21_03_41_13/checkpoints/epoch-74.ckpt
   #ckpt_path: logs/pvqVAE/pvqVAE-Train/2024_05_26_02_46_01/checkpoints/epoch-114.ckpt # PatchedPVQVAE
   #ckpt_path: logs/pvqVAE/pvqVAE-RandTransformerTrain2/2024_05_27_03_34_37/checkpoints/epoch-500.ckpt #16bs tran
@@ -33,6 +33,7 @@ training:
   #ckpt_path: logs/imp_experiments/2024_05_09_03_55_02/checkpoints/epoch-124.ckpt
   ckpt_path: logs/VAEPlzWork/128x10e-4x1e-4/2024_06_02_23_35_18/checkpoints/epoch-latest.ckpt
   ckpt_path: logs/vaeKosmoBa2a/Cars256KL/2024_06_24_19_39_11/checkpoints/epoch-14.ckpt
+  ckpt_path: logs/vaeKosmoBa2a/Chairs256ConvLinear/2024_06_24_22_16_25/checkpoints/epoch-44.ckpt
   use_scheduler: True
   apply_metrics_batch_count: 5 # number of batches to apply additional metrics on
 #2024_05_16_20_23_24 id
