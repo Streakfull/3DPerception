@@ -37,6 +37,3 @@ class ShapeNetV3SDF(BaseShapeNet):
         sdf = (sdf).reshape(64, 64, 64)
         # sdf = np.clip(sdf, a_min=-1, a_max=1)
         return sdf
-
-    def __len__(self):
-        return 1000

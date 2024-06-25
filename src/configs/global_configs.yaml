@@ -4,7 +4,7 @@
 training:
   name: vaeKosmomeinOmo
   description: plzWork2
-  experiment_id: CarsDev # None | A unique id identifying the experiment folder
+  experiment_id: Chairs2048FullConv # None | A unique id identifying the experiment folder
   #experiment_id: None
   extra_notes: none
   logs_dir: logs
@@ -121,10 +121,10 @@ model:
     model_class: VAE
     metrics: iou,chamferDistance   # None | iou | chamferDistance
     losses: "l1,kl,kl_weight" #additional loss names
-    lr: 4.5e-6
+    lr: 1.0e-4
     criterion: L1
-    base_kl_weight: 1.56e-4
-    reconst_weight: 1.0e-4 #1
+    base_kl_weight: 1.56e-6
+    reconst_weight: 1 #1
     scheduler_step_size: 30
     scheduler_gamma: 0.5
     cycle_iter: 15000

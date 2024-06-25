@@ -31,8 +31,8 @@ class VAE(AutoEncoder):
 
         # self.dec_in = nn.ConvTranspose3d(
         #     in_channels=512, out_channels=512, kernel_size=4)
-        self.norm_mu = nn.LayerNorm((4, 8, 8, 8))
-        self.norm_log_var = nn.LayerNorm((4, 8, 8, 8))
+        self.norm_mu = nn.LayerNorm(2048)
+        self.norm_log_var = nn.LayerNorm(2048)
         # self.norm_z_out = nn.BatchNorm1d(512)
         self.optimizer = optim.Adam(
             params=self.parameters(), lr=configs["lr"], betas=(0.5, 0.9))
@@ -54,13 +54,13 @@ class VAE(AutoEncoder):
         x = self.encoder(x)
         x = self.conv_in(x)
         self.mu, self.logvar = torch.chunk(x, chunks=2, dim=1)
-        self.mu = self.norm_mu(self.mu)
-        self.logvar = self.norm_log_var(self.logvar)
-        # self.mu = rearrange(
-        #     self.mu, "bs (ch l w h)-> bs ch l w h", ch=4, l=8, w=8, h=8)
-        # self.logvar = rearrange(
-        #     self.logvar, "bs (ch l w h)-> bs ch l w h", ch=4, l=8, w=8, h=8
-        # )
+        self.mu = self.norm_mu(self.mu.flatten(1))
+        self.logvar = self.norm_log_var(self.logvar.flatten(1))
+        self.mu = rearrange(
+            self.mu, "bs (ch l w h)-> bs ch l w h", ch=4, l=8, w=8, h=8)
+        self.logvar = rearrange(
+            self.logvar, "bs (ch l w h)-> bs ch l w h", ch=4, l=8, w=8, h=8
+        )
 
         if (self.is_vae):
             if (self.training):
@@ -94,9 +94,9 @@ class VAE(AutoEncoder):
             self.kl_loss = self.kl(self.mu, self.logvar)
         else:
             self.kl_loss = torch.tensor(0, device=self.predictions.device)
-        # self.loss = (self.reconst_weight*self.reconst_loss*1/4) + \
-        #     (self.kl_weight*self.kl_loss)
-        self.loss = (self.reconst_weight*self.reconst_loss*1/4)
+        self.loss = (self.reconst_weight*self.reconst_loss) + \
+            (self.kl_weight*self.kl_loss)
+        # self.loss = (self.reconst_weight*self.reconst_loss)
         # self.loss = (self.reconst_weight * self.reconst_loss) + \
         #     (self.kl_weight*self.kl_loss)
 
@@ -119,7 +119,7 @@ class VAE(AutoEncoder):
         self.kl_weight = self.base_kl_weight
 
     def get_metrics(self):
-        return {'loss': self.loss.data, 'l1': (self.reconst_loss.detach().mean()/64**3)/4, 'kl': self.kl_loss.data, 'kl_weight': self.kl_weight}
+        return {'loss': self.loss.data, 'l1': self.reconst_loss.detach().mean(), 'kl': self.kl_loss.data, 'kl_weight': self.kl_weight}
 
     def calculate_additional_metrics(self):
         metrics = {}
