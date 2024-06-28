@@ -22,7 +22,7 @@ class Encoder(torch.nn.Module):
         conv2_channels = int(out_conv_channels / 4)
         conv3_channels = int(out_conv_channels / 2)
         self.out_conv_channels = out_conv_channels
-        self.out_dim = int(dim / 16)
+        self.out_dim = int(dim / 8)
 
         self.conv1 = nn.Sequential(
             nn.Conv3d(
@@ -65,20 +65,23 @@ class Encoder(torch.nn.Module):
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.conv3(x)
-        x = self.conv4(x)
+
+       # x = self.conv4(x)
+
         # Flatten and apply linear + sigmoid
-        x = x.view(-1, self.out_conv_channels *
-                   self.out_dim * self.out_dim * self.out_dim)
+        # x = x.view(-1, self.out_conv_channels *
+        #            self.out_dim * self.out_dim * self.out_dim)
+        x = x.flatten(1)
         # x = self.out(x)
         return x
 
 
 class Decoder(torch.nn.Module):
-    def __init__(self, in_channels=512, out_dim=64, out_channels=1, noise_dim=200, activation="tanh"):
+    def __init__(self, in_channels=256, out_dim=64, out_channels=1, noise_dim=200, activation="tanh"):
         super(Decoder, self).__init__()
         self.in_channels = in_channels
         self.out_dim = out_dim
-        self.in_dim = int(out_dim / 16)
+        self.in_dim = int(out_dim / 8)
         conv1_out_channels = int(self.in_channels / 2.0)
         conv2_out_channels = int(conv1_out_channels / 2)
         conv3_out_channels = int(conv2_out_channels / 2)
@@ -106,20 +109,20 @@ class Decoder(torch.nn.Module):
         )
         self.conv3 = nn.Sequential(
             nn.ConvTranspose3d(
-                in_channels=conv2_out_channels, out_channels=conv3_out_channels, kernel_size=(
+                in_channels=conv2_out_channels, out_channels=1, kernel_size=(
                     4, 4, 4),
                 stride=2, padding=1, bias=False
             ),
-            nn.BatchNorm3d(conv3_out_channels),
+            # nn.BatchNorm3d(1),
             nn.ReLU(inplace=True)
         )
-        self.conv4 = nn.Sequential(
-            nn.ConvTranspose3d(
-                in_channels=conv3_out_channels, out_channels=out_channels, kernel_size=(
-                    4, 4, 4),
-                stride=2, padding=1, bias=False
-            )
-        )
+        # self.conv4 = nn.Sequential(
+        #     nn.ConvTranspose3d(
+        #         in_channels=conv3_out_channels, out_channels=out_channels, kernel_size=(
+        #             4, 4, 4),
+        #         stride=2, padding=1, bias=False
+        #     )
+        # )
         if activation == "sigmoid":
             self.out = torch.nn.Sigmoid()
         else:
@@ -139,7 +142,8 @@ class Decoder(torch.nn.Module):
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.conv3(x)
-        x = self.conv4(x)
+        # x = self.conv4(x)
+       # return x
         return self.out(x)*0.2
 
 
@@ -160,7 +164,14 @@ class VAE(BaseModel):
         self.decoder = Decoder()
         self.criterion = BuildLoss(configs).get_loss()
         self.set_metrics()
-        self.posterior = nn.Linear(512*4*4*4, out_features=400)
+        self.linear_in = nn.Sequential(
+            nn.Linear(256*8*8*8, out_features=512),
+            # nn.Conv3d(in_channels=256, out_channels=1, kernel_size=1),
+            nn.Flatten(start_dim=1),
+            nn.BatchNorm1d(512),
+            nn.ReLU(inplace=True))
+        self.posterior = nn.Linear(in_features=512, out_features=400)
+       # self.single_channel =
 
         self.optimizer = optim.Adam(
             params=self.parameters(), lr=configs["lr"], betas=(0.5, 0.9))
@@ -171,6 +182,7 @@ class VAE(BaseModel):
     def forward(self, x):
         self.target = x
         x = self.encoder(x)
+        x = self.linear_in(x)
         x = self.posterior(x)
         self.mu, self.logvar = torch.chunk(x, dim=1, chunks=2)
         if (self.training):
@@ -181,6 +193,8 @@ class VAE(BaseModel):
        # z = self.norm_z(z.flatten(1))
         x = self.decode(z)
         self.predictions = x
+        # import pdb
+        # pdb.set_trace()
         return x
 
     def decode(self, z):
@@ -197,12 +211,13 @@ class VAE(BaseModel):
             self.predictions, self.target)
         self.set_kl_weight()
         self.kl_loss = self.kl(self.mu, self.logvar)
+        # self.kl_loss = torch.tensor(0, device=self.predictions.device)
 
-        # self.loss = (self.reconst_weight*self.reconst_loss*1/4) + \
-        #     (self.kl_weight*self.kl_loss)
-        # self.loss = (self.reconst_weight*self.reconst_loss)
-        self.loss = (self.reconst_weight * self.reconst_loss) + \
+        self.loss = (self.reconst_weight*self.reconst_loss) + \
             (self.kl_weight*self.kl_loss)
+        # self.loss = (self.reconst_weight*self.reconst_loss)
+        # self.loss = (self.reconst_weight * self.reconst_loss) + \
+        #     (self.kl_weight*self.kl_loss)
 
     def set_kl_weight(self):
         # 14999

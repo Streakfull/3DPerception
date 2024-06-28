@@ -12,6 +12,7 @@ class ShapeNetV3SDF(BaseShapeNet):
     def __getitem__(self, index):
         shape_key, class_index, class_name, id = super().__getitem__(index)
         sdf = self.get_shape_sdf(shape_key)
+        sdf = self.transform(sdf)
         return {
             "sdf": sdf[np.newaxis, :, :, :],
             "label": class_index,
@@ -37,3 +38,13 @@ class ShapeNetV3SDF(BaseShapeNet):
         sdf = (sdf).reshape(64, 64, 64)
         # sdf = np.clip(sdf, a_min=-1, a_max=1)
         return sdf
+
+    def transform(self, sdf):
+        p = np.random.rand()
+        if (p < 0.5):
+            return sdf
+        sdf = np.transpose(sdf, axes=(2, 1, 0))
+        return sdf
+
+    # def __len__(self):
+    #     return 1000

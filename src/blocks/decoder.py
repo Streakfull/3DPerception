@@ -12,6 +12,7 @@ class Decoder(nn.Module):
                  attn_resolutions=[8], dropout=0.0, resamp_with_conv=True,
                  resolution=1):
         super().__init__()
+        # ch_mult = [1, 2, 2, 2, 4]
         self.num_resolutions = len(ch_mult)
         self.num_res_blocks = num_res_blocks
         self.resolution = resolution
@@ -52,6 +53,7 @@ class Decoder(nn.Module):
             block = nn.ModuleList()
             attn = nn.ModuleList()
             block_out = 64*(max(ch_mult[i_level]-1, 1))
+            # block_out = 64*ch_mult[i_level]
             # for i_block in range(self.num_res_blocks+1):
             # change this to align with encoder
             for i_block in range(self.num_res_blocks):

@@ -56,6 +56,7 @@ class ModelTrainer:
         additional_metrics_dict_train = self._init_metrics_dict(
             self.model.get_additional_metrics()
         )
+        self.model.set_epoch(epoch)
         metric_batch_indices = np.random.randint(len(
             self.train_dataloader), size=self.training_config["apply_metrics_batch_count"])
 
@@ -70,7 +71,7 @@ class ModelTrainer:
         else:
             enumartion = self.tqdm(
                 enumerate(self.train_dataloader), total=len(self.train_dataloader))
-
+        self.model.set_iter_per_epoch(len(self.train_dataloader))
         for batch_idx, batch in enumartion:
             # for batch_idx, batch in enumerate(self.train_dataloader):
             self.model.train()
@@ -90,7 +91,7 @@ class ModelTrainer:
             self._add_losses_to_dict(train_loss_running)
             batch_iteration += 1
 
-            if (batch_idx in metric_batch_indices and not self.is_overfit):
+            if (False and batch_idx in metric_batch_indices and not self.is_overfit):
                 cprint.ok(
                     f"Calculating additional metrics for training batch {batch_idx}")
                 additional_metrics = self.model.calculate_additional_metrics()
@@ -155,7 +156,8 @@ class ModelTrainer:
                 for batch_index, batch_val in self.tqdm(enumerate(self.validation_dataloader), total=len(
                         self.validation_dataloader)):
                     with torch.no_grad():
-                        apply_additional_metrics = batch_index in metric_batch_indices
+                        apply_additional_metrics = False and (
+                            batch_index in metric_batch_indices)
                         self.dataset_type.move_batch_to_device(
                             batch_val, self.device)
                         self.model.inference(

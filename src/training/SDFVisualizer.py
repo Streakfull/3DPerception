@@ -16,7 +16,11 @@ class SDFVisualizer:
         self.logger = logger
 
     def visualize(self, sdf):
-        im, mesh = render_sdf(self.render, sdf)
+        if ("tanh" in self.key):
+            im, mesh = render_sdf(self.render, sdf, level=0.01)
+        else:
+            im, mesh = render_sdf(self.render, sdf)
+
         self.handle_images(im)
         # self.handle_gif(mesh)
 
