@@ -24,10 +24,12 @@ class ShapeNetV3SDF(BaseShapeNet):
     def get_shape_sdf(self, shapenet_key):
         sdf = ShapeNetV3SDF.read_sdf(
             f"{self.dataset_path}/{shapenet_key}/ori_sample.h5")
-        # sdf = sdf/np.max(sdf)
-        # sdf = (sdf-np.min(sdf))/(np.max(sdf)-np.min(sdf))
         sdf = np.clip(sdf, a_min=-0.2, a_max=0.2)
         sdf = sdf*5
+        # sm_0 = sdf <= 0.1
+        # bg_0 = sdf > 0.1
+        # sdf[sm_0] = 1
+        # sdf[bg_0] = 0
         return sdf
 
     @staticmethod

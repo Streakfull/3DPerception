@@ -190,7 +190,7 @@ def sdf_to_mesh(sdf, level=0.02, color=None, render_all=False):
     return p3d_mesh
 
 
-def render_sdf(mesh_renderer, sdf, level=0.5, color=None, render_imsize=256, render_all=False):
+def render_sdf(mesh_renderer, sdf, level=0.1, color=None, render_imsize=256, render_all=False):
     """ 
         shape of sdf:
         - bs, 1, nC, nC, nC 

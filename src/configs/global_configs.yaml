@@ -2,7 +2,7 @@
 # Add configurations as needed
 
 training:
-  name: simpleVAE
+  name: vaeOccupancy
   description: NormVis
   #experiment_id: Chairs2048FullConvWithDataAugCont2 # None | A unique id identifying the experiment folder
   #experiment_id: Charis256FullyConvWithDataAug
@@ -11,7 +11,7 @@ training:
  # experiment_id: vae256x8x128EncoderLinearLinearAttn
   #experiment_id: resNetDecoderx5sdf
   #experiment_id: 512LSChairNoSlope
-  experiment_id: VGGEncoder
+  experiment_id: 200BceKL
   ##experiment_id: None
   extra_notes: none
   logs_dir: logs
@@ -151,16 +151,17 @@ model:
     lr: 1.25e-4
     #lr: 1.0e-4
     criterion: L1
-    base_kl_weight: 2.5e-3
+    base_kl_weight: 2.5e-6
+    #base_kl_weight: 1
     #base_kl_weight: 1.0e-4
-    reconst_weight: 1.0e-4 #1
+    reconst_weight: 1 #1
     scheduler_step_size: 2000
     scheduler_gamma: 0.9
     #cycle_iter: 10000
-    cycle_iter: 2500
+    cycle_iter: 5000
     stop_cycle_count: 100000
-    use_kl: False
-    use_cycles: False
+    use_kl: True
+    use_cycles: True
    #stop_cycle_count: 1
     weight_init: normal    #None | normal | xavier | xavier_uniform | kaiming | orthogonal
     gain: 0.02

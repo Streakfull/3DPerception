@@ -75,7 +75,7 @@ class Encoder(torch.nn.Module):
         conv1_channels = int(out_conv_channels / 8)
         conv2_channels = int(out_conv_channels / 4)
         conv3_channels = int(out_conv_channels / 2)
-        self.out_conv_channels = 256
+        self.out_conv_channels = 64
         self.out_dim = int(dim / 8)
 
         self.conv1 = nn.Sequential(
@@ -209,6 +209,91 @@ class Decoder(torch.nn.Module):
         # import pdb
         # pdb.set_trace()
         return self.out(x)
+        # return x
+
+
+# class Decoder(torch.nn.Module):
+#     def __init__(self, in_channels=512, out_dim=64, out_channels=1, noise_dim=200, activation="tanh"):
+#         super(Decoder, self).__init__()
+#         self.in_channels = in_channels
+#         self.out_dim = out_dim
+#         self.in_dim = int(out_dim / 8)
+#         conv1_out_channels = int(self.in_channels / 2.0)
+#         conv2_out_channels = int(conv1_out_channels / 2)
+#         conv3_out_channels = int(conv2_out_channels / 2)
+#         conv4_out_channels = int(conv3_out_channels / 2)
+
+#         # self.linear = torch.nn.Linear(
+#         #     noise_dim, in_channels * self.in_dim * self.in_dim * self.in_dim)
+
+#         self.conv1 = nn.Sequential(
+#             nn.ConvTranspose3d(
+#                 in_channels=in_channels, out_channels=conv1_out_channels, kernel_size=(
+#                     4, 4, 4),
+#                 stride=2, padding=1, bias=False
+#             ),
+#             nn.BatchNorm3d(conv1_out_channels),
+#             nn.ReLU(inplace=True)
+#         )
+#         self.conv2 = nn.Sequential(
+#             nn.ConvTranspose3d(
+#                 in_channels=conv1_out_channels, out_channels=conv2_out_channels, kernel_size=(
+#                     4, 4, 4),
+#                 stride=2, padding=1, bias=False
+#             ),
+#             nn.BatchNorm3d(conv2_out_channels),
+#             nn.ReLU(inplace=True)
+#         )
+#         self.conv3 = nn.Sequential(
+#             nn.ConvTranspose3d(
+#                 in_channels=conv2_out_channels, out_channels=conv3_out_channels, kernel_size=(
+#                     4, 4, 4),
+#                 stride=2, padding=1, bias=False
+#             ),
+#             nn.BatchNorm3d(conv3_out_channels),
+#             nn.ReLU(inplace=True)
+#         )
+
+#         self.conv4 = nn.Sequential(
+#             nn.ConvTranspose3d(
+#                 in_channels=conv3_out_channels, out_channels=conv4_out_channels, kernel_size=(
+#                     4, 4, 4),
+#                 stride=2, padding=1, bias=False
+#             ),
+#             nn.BatchNorm3d(conv4_out_channels),
+#             nn.ReLU(inplace=True)
+#         )
+
+#         self.conv5 = nn.Sequential(
+#             nn.ConvTranspose3d(
+#                 in_channels=conv2_out_channels, out_channels=out_channels, kernel_size=(
+#                     4, 4, 4),
+#                 stride=2, padding=1, bias=False
+#             )
+#         )
+#         if activation == "sigmoid":
+#             self.out = torch.nn.Sigmoid()
+#         else:
+#             self.out = torch.nn.Tanh()
+
+#     def project(self, x):
+#         """
+#         projects and reshapes latent vector to starting volume
+#         :param x: latent vector
+#         :return: starting volume
+#         """
+#         return x.view(-1, self.in_channels, self.in_dim, self.in_dim, self.in_dim)
+
+#     def forward(self, x):
+#         # x = self.linear(x)
+#         # x = self.project(x)
+#         x = self.conv1(x)
+#         x = self.conv2(x)
+#         # x = self.conv3(x)
+#         # x = self.conv4(x)
+#         x = self.conv5(x)
+#         # return x
+#         return self.out(x)
 
 
 class VAE(BaseModel):
@@ -225,28 +310,29 @@ class VAE(BaseModel):
         self.use_kl = configs['use_kl']
         self.use_cycles = configs['use_cycles']
         self.encoder = Encoder()
-        self.decoder = Decoder(in_channels=256)
+        self.decoder = Decoder(in_channels=64)
         self.criterion = BuildLoss(configs).get_loss()
+        # self.bce = nn.BCEWithLogitsLoss(pos_weight=torch.ones([64])*2)
         self.linear_in = nn.Sequential(nn.Linear(
-            in_features=512*256, out_features=512),
-            nn.BatchNorm1d(512),
+            in_features=64*512, out_features=2048),
+            nn.BatchNorm1d(2048),
             nn.LeakyReLU(0.2, inplace=True)
         )
         self.linear_mu = nn.Sequential(
-            nn.Linear(in_features=512, out_features=200),
+            nn.Linear(in_features=2048, out_features=2048),
             # nn.BatchNorm1d(num_features=200)
         )
 
         self.linear_logvar = nn.Sequential(
-            nn.Linear(in_features=512, out_features=200),
+            nn.Linear(in_features=2048, out_features=2048),
             # nn.BatchNorm1d(num_features=200)
 
         )
 
         # self.linear_dec_in = nn.Linear(in_features=200, out_features=512)
         self.linear_dec_out = nn.Sequential(
-            nn.Linear(in_features=200, out_features=256*512),
-            nn.BatchNorm1d(256*512),
+            nn.Linear(in_features=2048, out_features=64*512),
+            nn.BatchNorm1d(64*512),
             nn.ReLU())
 
         # self.quant_conv = nn.Conv3d(
@@ -262,8 +348,10 @@ class VAE(BaseModel):
     def forward(self, x):
         self.target = x
         x = self.encoder(x)
+
         x = x.flatten(1)
         x = self.linear_in(x)
+
         self.mu = self.linear_mu(x)
         self.logvar = self.linear_logvar(x)
         # x = self.posterior(x)
@@ -281,7 +369,7 @@ class VAE(BaseModel):
     def decode(self, z):
         # z = self.linear_dec_in(z)
         z = self.linear_dec_out(z)
-        z = rearrange(z, 'bs (ch l w h)->bs ch l w h', ch=256, l=8, w=8, h=8)
+        z = rearrange(z, 'bs (ch l w h)->bs ch l w h', ch=64, l=8, w=8, h=8)
         x = self.decoder(z)
         return x
 
@@ -293,16 +381,16 @@ class VAE(BaseModel):
     def set_loss(self):
         self.reconst_loss = self.criterion(
             self.predictions, self.target)
+      #  self.reconst_loss = self.bce(self.predictions, self.target)
         self.set_kl_weight()
         self.kl_loss = self.kl(self.mu, self.logvar)
         # self.loss = (self.reconst_weight*self.reconst_loss*1/4) + \
         #     (self.kl_weight*self.kl_loss)
         if (self.use_kl):
-            self.loss = (self.reconst_weight*self.reconst_loss *
-                         (1/self.predictions.shape[0])) + self.kl_weight*self.kl_loss
+            self.loss = (self.reconst_weight*self.reconst_loss) + \
+                self.kl_weight*self.kl_loss
         else:
-            self.loss = (self.reconst_weight*self.reconst_loss *
-                         (1/self.predictions.shape[0]))
+            self.loss = (self.reconst_weight*self.reconst_loss)
         # self.loss = (self.reconst_weight * self.reconst_loss) + \
         #     (self.kl_weight*self.kl_loss)
 
@@ -376,7 +464,7 @@ class VAE(BaseModel):
 
     def get_metrics(self):
         return {'loss': self.loss.data,
-                'l1': self.reconst_loss.detach()/(64**3)*(1/self.predictions.shape[0]),
+                'l1': self.reconst_loss,
                 'mu_mean': self.mu.detach().mean(),
                 'kl_weight': self.kl_weight,
                 'kl': self.kl_loss.data,
@@ -412,14 +500,19 @@ class VAE(BaseModel):
     def sample(self, n_samples=1, device="cuda:0"):
         self.eval()
         with torch.no_grad():
-            z = torch.randn(size=(n_samples, 200)).to(device=device)
+            z = torch.randn(size=(n_samples, 2048)).to(device=device)
             out = self.decode(z)
+            # out = nn.functional.sigmoid(out)
+            # pos = out > 0.5
+            # neg = out <= 0.5
+            # out[pos] = 1
+            # out[neg] = 0
             return out, z
 
     def sample_uniform(self, n_samples=1, device="cuda:0"):
         self.eval()
         with torch.no_grad():
-            z = torch.rand(size=(n_samples, 200)).to(device=device)
+            z = torch.rand(size=(n_samples, 2048)).to(device=device)
            # z += z*torch.randn_like(z)
             out = self.decode(z)
             return out, z
@@ -429,14 +522,22 @@ class VAE(BaseModel):
 
     def prepare_visuals(self):
         visuals = {
-            "reconstructions": self.predictions,
+            "reconstructions": self.occup(),
             "target": self.target,
             "samples": self.sample(n_samples=max(self.predictions.shape[0]*4, 16))[0],
-            "samples_uniform": self.sample_uniform(n_samples=max(self.predictions.shape[0]*4, 16))[0]
+            # "samples_uniform": self.sample_uniform(n_samples=max(self.predictions.shape[0]*4, 16))[0]
 
 
         }
         return visuals
+
+    def occup(self):
+        out = nn.functional.sigmoid(self.predictions.detach())
+        pos = out > 0.5
+        neg = out <= 0.5
+        out[pos] = 1
+        out[neg] = 0
+        return out
 
     def backward(self):
         self.set_loss()
