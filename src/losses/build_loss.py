@@ -30,6 +30,6 @@ class BuildLoss:
 
             case "L1":
                 # return nn.L1Loss(reduction="sum")
-                return L1(reduction="mean")
+                return L1(reduction="sum")
 
         return nn.CrossEntropyLoss()

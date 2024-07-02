@@ -18,6 +18,8 @@ class VAE3D(BaseModel):
         self.encoder_channels = configs["auto_encoder_networks"]["out_channels"]
         self.reconst_weight = configs['reconst_weight']
         self.configs = configs
+        self.use_kl = configs['use_kl']
+        self.use_cycles = configs['use_cycles']
 
         self.conv1 = nn.Conv3d(
             in_channels=1,
@@ -96,18 +98,18 @@ class VAE3D(BaseModel):
         self.mu_fc = nn.Sequential(
 
             nn.Linear(in_features=512, out_features=256),
-            # nn.BatchNorm1d(256),
+            nn.BatchNorm1d(256),
         )
 
         self.logvar_fc = nn.Sequential(
             nn.Linear(in_features=512, out_features=256),
-            # nn.BatchNorm1d(256),
+            nn.BatchNorm1d(256),
         )
 
         self.dec_fc1 = nn.Sequential(
             nn.Linear(in_features=256, out_features=512),
             nn.ELU(),
-            # nn.BatchNorm1d(512)
+            nn.BatchNorm1d(512)
         )
 
         self.dec_conv1 = nn.ConvTranspose3d(
@@ -185,18 +187,16 @@ class VAE3D(BaseModel):
 
             self.dec_conv6,
             nn.ELU(),
-            nn.BatchNorm3d(1)
+            # nn.BatchNorm3d(1),
+            nn.Tanh()
         )
 
         self.kl = KLDivergence()
         self.criterion = BuildLoss(configs).get_loss()
         self.optimizer = optim.Adam(
-            params=self.parameters(), lr=configs["lr"])
+            params=self.parameters(), lr=configs["lr"], betas=(0.5, 0.9))
         self.scheduler = optim.lr_scheduler.StepLR(
             self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
-
-        self.norm_out_2 = nn.BatchNorm3d(1)
-        self.sigmoid = nn.Sigmoid()
 
     @ property
     def is_vae(self):
@@ -216,10 +216,10 @@ class VAE3D(BaseModel):
         x = self.dec_fc1(z)
         z = rearrange(x, 'bs (c l w h) -> bs c l w h', c=1, l=8, w=8, h=8)
 
-        x = self.decoder(z)
+        x = self.decoder(z)*0.2
         # x = self.norm_out_2(x)
         # x = self.sigmoid(x)*0.2
-        self.x_reconst = x
+        self.predictions = x
         return x
 
     def _reparameterize(self, mu, logvar):
@@ -228,6 +228,7 @@ class VAE3D(BaseModel):
         return mu + (eps * std)
 
     def init_weights(self):
+        return
         init_type = self.configs['weight_init']
         gain = self.configs['gain']
         init_weights(self, init_type=init_type, gain=gain)
@@ -251,20 +252,43 @@ class VAE3D(BaseModel):
             x = self.decoder(z)
             return x
 
+    # def sample_uniform(self, n_sammples=1, device="cuda:0"):
+    #     self.eval()
+    #     with torch.no_grad():
+    #         z = torch.randn(size=(n_samples, 256)).to(device=device)
+    #         x = self.dec_fc1(z)
+    #         z = rearrange(x, 'bs (c l w h) -> bs c l w h', c=1, l=8, w=8, h=8)
+    #         x = self.decoder(z)
+    #         return x
+
+        # self.loss = (self.reconst_weight*self.reconst_loss*1/4) + \
+        #     (self.kl_weight*self.kl_loss)
+        if (self.use_kl):
+            self.loss = (self.reconst_weight*self.reconst_loss *
+                         (1/self.predictions.shape[0])) + (self.kl_weight*self.kl_loss)
+        else:
+            self.loss = (self.reconst_weight*self.reconst_loss *
+                         (1/self.predictions.shape[0]))
+
     def set_loss(self):
         self.reconst_loss = self.criterion(
-            self.x_reconst, self.target)
+            self.predictions, self.target)
         self.set_kl_weight()
-        if (self.is_vae and self.kl_weight > 0):
-            self.kl_loss = self.kl(self.mu, self.logvar)
-        else:
-            self.kl_loss = torch.tensor(0, device=self.x_reconst.device)
+        self.kl_loss = self.kl(self.mu, self.logvar)
 
-        self.loss = (self.reconst_weight*self.reconst_loss) + \
-            (self.kl_weight*self.kl_loss)
+        # self.loss = (self.reconst_weight*self.reconst_loss*1/4) + \
+        #     (self.kl_weight*self.kl_loss)
+        if (self.use_kl):
+            self.loss = (self.reconst_weight*self.reconst_loss *
+                         (1/self.predictions.shape[0])) + (self.kl_weight*self.kl_loss)
+        else:
+            self.loss = (self.reconst_weight*self.reconst_loss)
 
     def set_kl_weight(self):
         # 14999
+        if (not self.use_cycles):
+            self.kl_weight = self.base_kl_weight
+            return
         div = self.iteration / self.cycle_iter
         current_iteration = 0
         if (div < 0):
@@ -275,7 +299,11 @@ class VAE3D(BaseModel):
         self.kl_weight = min(current_iteration/(self.cycle_iter*0.5), 1)
         if (self.iteration//self.stop_cycle_count) >= 1:
             self.kl_weight = 1
-        self.kl_weight = self.base_kl_weight * self.kl_weight
+        # self.kl_weight /= (self.encoder_channels * 8 * 8 * 8)
+        current_cycle = self.iteration//self.cycle_iter
+        self.kl_weight = (self.base_kl_weight * self.kl_weight) + \
+            (current_cycle*self.base_kl_weight) + 1.0e-8
+        self.kl_weight = min(self.kl_weight, 5)
 
     def backward(self):
         self.set_loss()
@@ -294,16 +322,30 @@ class VAE3D(BaseModel):
         return x
 
     def get_metrics(self):
-        return {'loss': self.loss.data, 'l2': self.reconst_loss.data, 'kl': self.kl_loss.data, 'signedIou': 0}
+        return {'loss': self.loss.data,
+                # 'l1': self.reconst_loss.detach()/(64**3)*(1/self.predictions.shape[0]),
+                'l1': self.reconst_loss.detach(),
+                'kl': self.kl_loss.data, 'kl_weight': self.kl_weight,
+                'mu_mean': self.mu.detach().mean(),
+                'mu_var': self.mu.detach().var()
+
+                }
 
     def get_batch_input(self, x):
         return x['sdf']
 
     def prepare_visuals(self):
         visuals = {
-            "reconstructions": self.x_reconst,
+            "reconstructions": self.predictions,
             "target": self.target,
-            "samples": self.sample(n_samples=self.x_reconst.shape[0]),
+            "samples": self.sample(n_samples=max(self.predictions.shape[0]*4, 16)),
+
 
         }
         return visuals
+
+    def set_epoch(self, epoch):
+        self.epoch = epoch
+
+    def set_iter_per_epoch(self, iter):
+        self.iter_per_epoch = iter

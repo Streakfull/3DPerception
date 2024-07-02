@@ -56,10 +56,10 @@ class ResnetBlock(nn.Module):
 
     def forward(self, x):
         h = x
+
         h = self.norm1(h)
         h = self.conv1(h)
         h = nonlinearity(h)
-
         h = self.norm2(h)
        # h = self.dropout(h)
         h = self.conv2(h)

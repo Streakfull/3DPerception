@@ -2,28 +2,33 @@
 # Add configurations as needed
 
 training:
-  name: vaePresent
+  name: simpleVAE
   description: NormVis
   #experiment_id: Chairs2048FullConvWithDataAugCont2 # None | A unique id identifying the experiment folder
   #experiment_id: Charis256FullyConvWithDataAug
-  experiment_id: SimpleVAEFullTrain
+  #experiment_id: vae256x8x8xEncoderLinearLinear
+  #experiment_id: vae256x8x128EncoderLinearLinear
+ # experiment_id: vae256x8x128EncoderLinearLinearAttn
+  #experiment_id: resNetDecoderx5sdf
+  #experiment_id: 512LSChairNoSlope
+  experiment_id: VGGEncoder
   ##experiment_id: None
   extra_notes: none
   logs_dir: logs
   is_train: true
   device: cuda:0
-  batch_size: 16
+  batch_size: 32
   num_workers: 16
   test_size: 0.1
   n_epochs: 50000
-  append_loss_every: 50
-  print_every: 50
-  validate_every: 1480
-  save_every: 1480
-  save_every_nepochs: 50
+  append_loss_every: 250
+  print_every: 200
+  validate_every: 4310
+  save_every: 4310
+  save_every_nepochs: 1000
   start_epoch: 0
   start_iteration: 0
-  visualize_every: 200
+  visualize_every: 1000
   apply_metrics_every: 1480
   load_ckpt: False
   #ckpt_path: logs/VaeTry2/8*8*8**FullTrain/2024_05_21_03_41_13/checkpoints/epoch-74.ckpt
@@ -36,11 +41,26 @@ training:
   ckpt_path: logs/VAEPlzWork/128x10e-4x1e-4/2024_06_02_23_35_18/checkpoints/epoch-latest.ckpt
   ckpt_path: logs/vaeKosmoBa2a/Cars256KL/2024_06_24_19_39_11/checkpoints/epoch-14.ckpt
   ckpt_path: logs/vaeKosmoBa2a/Chairs256ConvLinear/2024_06_24_22_16_25/checkpoints/epoch-44.ckpt
-  #ckpt_path: logs/vaeKosmomeinOmo/Chairs2048FullConvWithDataAug/2024_06_25_12_15_40/checkpoints/epoch-latest.ckpt
-  ckpt_path: logs/vaeKosmomeinOmo/Chairs2048FullConvWithDataAugContinueHighKL/2024_06_26_14_42_05/checkpoints/epoch-26.ckpt
+  ckpt_path: logs/vaeKosmomeinOmo/Chairs2048FullConvWithDataAug/2024_06_25_12_15_40/checkpoints/epoch-latest.ckpt
+ # ckpt_path: logs/vaeKosmomeinOmo/Chairs2048FullConvWithDataAugContinueHighKL/2024_06_26_14_42_05/checkpoints/epoch-26.ckpt
   #ckpt_path: logs/vaeKosmomeinOmo/Chairs2048FullConvWithDataAugCont2/2024_06_26_22_05_43/checkpoints/epoch-28.ckpt
   #ckpt_path: logs/vaeKosmomeinOmo/1000Chair24x8KLStep/2024_06_27_06_17_13/checkpoints/epoch-162.ckpt
-  ckpt_path: logs/vaePresent/32x8Cars/2024_06_27_20_24_49/checkpoints/epoch-8.ckpt
+ # ckpt_path: logs/vaePresent/32x8Cars/2024_06_27_20_24_49/checkpoints/epoch-8.ckpt
+  #ckpt_path: logs/simpleVAE/resnetDecoderKL/2024_06_29_20_07_00/checkpoints/epoch-250.ckpt
+  #ckpt_path: logs/simpleVAE/resnetDecoderKLContinue/2024_06_29_22_27_18/checkpoints/epoch-250.ckpt
+  #ckpt_path: logs/simpleVAE/resnetDecoderKLContinue/2024_06_29_22_27_18/checkpoints/epoch-350.ckpt
+  #ckpt_path: logs/simpleVAE/resnetDecoderKLContinue/2024_06_29_22_27_18/checkpoints/epoch-500.ckpt
+  #ckpt_path: logs/simpleVAE/resnetDecoderKLContinue/2024_06_29_22_27_18/checkpoints/epoch-900.ckpt
+  #ckpt_path: logs/simpleVAE/resnetDecoderKLContinue/2024_06_29_22_27_18/checkpoints/epoch-750.ckpt
+  #ckpt_path: logs/simpleVAE/resnetDecoderKLContinue/2024_06_29_22_27_18/checkpoints/epoch-250.ckpt
+  #ckpt_path: logs/simpleVAE/resnetDecoderKLContinue3/2024_06_30_16_39_18/checkpoints/epoch-450.ckpt
+
+
+  #ckpt_path: logs/simpleVAE/resnetDecoderKLContinue2/2024_06_30_09_12_57/checkpoints/epoch-700.ckpt
+  #ckpt_path: logs/simpleVAE/resnetDecoderKLContinue2/2024_06_30_09_12_57/checkpoints/epoch-200.ckpt
+  #ckpt_path: logs/simpleVAE/resnetDecoderKLContinue2/2024_06_30_09_12_57/checkpoints/epoch-350.ckpt
+  
+  
   use_scheduler: True
   apply_metrics_batch_count: 1 # number of batches to apply additional metrics on
 #2024_05_16_20_23_24 id
@@ -109,7 +129,7 @@ model:
     lr: 0.001
     losses: None
     criterion: MSE
-    scheduler_step_size: 300
+    scheduler_step_size: 250
     scheduler_gamma: 0.5
     weight_init: None    #None | normal | xavier | xavier_uniform | kaiming | orthogonal
     gain: 0.02 
@@ -127,23 +147,27 @@ model:
     model_filepath: src/models/vae.py
     model_class: VAE
     metrics: iou,chamferDistance   # None | iou | chamferDistance
-    losses: "l1,kl,kl_weight,mu_mean" #additional loss names
+    losses: "l1,kl,kl_weight,mu_mean,mu_var" #additional loss names
     lr: 1.25e-4
+    #lr: 1.0e-4
     criterion: L1
-    base_kl_weight: 5.0e-6
+    base_kl_weight: 2.5e-3
     #base_kl_weight: 1.0e-4
-    reconst_weight: 1 #1
-    scheduler_step_size: 250
-    scheduler_gamma: 0.5
+    reconst_weight: 1.0e-4 #1
+    scheduler_step_size: 2000
+    scheduler_gamma: 0.9
     #cycle_iter: 10000
-    cycle_iter: 10000
-    stop_cycle_count: 105000
+    cycle_iter: 2500
+    stop_cycle_count: 100000
+    use_kl: False
+    use_cycles: False
    #stop_cycle_count: 1
     weight_init: normal    #None | normal | xavier | xavier_uniform | kaiming | orthogonal
     gain: 0.02
+    ckpt_path: logs/VGG/trainFull/2024_07_01_17_50_17/checkpoints/epoch-36.ckpt
     auto_encoder_networks:
       in_channels: 1
-      out_channels: 72
+      out_channels: 256
       ch_mult: [1, 2, 2, 4]
       num_res_blocks: 1
       attn_resolutions: [8]
@@ -156,17 +180,19 @@ model:
     model_filepath: src/models/vae3D.py
     model_class: VAE3D
     metrics: iou,chamferDistance   # None | iou | chamferDistance
-    losses: "l2,kl" #additional loss names
-    lr: 1.0e-3
+    losses: "l1,kl,kl_weight,mu_mean,mu_var" #additional loss names
+    lr: 1.0e-4
     criterion: L1
     base_kl_weight: 0
-    reconst_weight: 1 #1
-    scheduler_step_size: 300
+    reconst_weight: 1.0 #1
+    scheduler_step_size: 50
     scheduler_gamma: 0.5
     cycle_iter: 20000
     stop_cycle_count: 1
+    use_kl: False
+    use_cycles: False
    #stop_cycle_count: 1
-    weight_init: normal    #None | normal | xavier | xavier_uniform | kaiming | orthogonal
+    weight_init: xavier   #None | normal | xavier | xavier_uniform | kaiming | orthogonal
     gain: 0.02
     auto_encoder_networks:
       in_channels: 1
@@ -249,6 +275,23 @@ model:
       dropout: 0.0
       resamp_with_conv: true
       resolution: 64
+  
+
+
+  vgg:
+    model_filepath: src/models/vgg19.py
+    model_class: VGG16
+    metrics: None   # None | iou | chamferDistance
+    losses: "acc" #additional loss names
+    lr: 1.0e-3
+    criterion: CE
+   #stop_cycle_count: 1
+    weight_init: normal    #None | normal | xavier | xavier_uniform | kaiming | orthogonal
+    gain: 0.02
+    scheduler_step_size: 30
+    scheduler_gamma: 0.5
+
+
 
 
 evaluation:

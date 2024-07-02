@@ -2,6 +2,7 @@ import os
 from termcolor import cprint
 import torch
 from src.metrics.metrics_builder import Metrics
+from src.blocks.attn_block import AttnBlock
 
 
 # modified from https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix
@@ -30,6 +31,8 @@ class BaseModel(torch.nn.Module):
         self.optimizer = None
         self.scheduler = None
         self.metrics = []
+        self.epoch = 0
+        self.iter_per_epoch = 1
 
     def set_input(self, input):
         self.input = input
@@ -55,6 +58,9 @@ class BaseModel(torch.nn.Module):
         return 0
 
     def update_lr(self):
+        # if (self.epoch > 10 and self.optimizer.param_groups[0]['lr'] == 1e-4):
+        #     self.optimizer.param_groups[0]['lr'] = 1e-3
+        #     return
         if (self.scheduler is None):
             return
         self.scheduler.step()
@@ -103,3 +109,12 @@ class BaseModel(torch.nn.Module):
 
     def prepare_visuals(self):
         return {}
+
+    def set_epoch(self, epoch):
+        self.epoch = epoch
+
+    def set_iteration(self, iteration):
+        self.iteration = iteration
+
+    def set_iter_per_epoch(self, iterations_per_epoch):
+        self.iter_per_epoch = iterations_per_epoch

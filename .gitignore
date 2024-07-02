@@ -175,3 +175,4 @@ tensorboard.ipynb
 nohup.out
 src/weights/*
 *_local.py
+simpleGan

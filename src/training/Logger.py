@@ -100,3 +100,6 @@ class Logger:
 
 
                                 )
+
+    def log_text(self, tag, text, iteration):
+        self._writer.add_text(tag=tag, text_string=text, global_step=iteration)

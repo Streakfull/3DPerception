@@ -24,7 +24,10 @@ class ShapeNetV3SDF(BaseShapeNet):
     def get_shape_sdf(self, shapenet_key):
         sdf = ShapeNetV3SDF.read_sdf(
             f"{self.dataset_path}/{shapenet_key}/ori_sample.h5")
+        # sdf = sdf/np.max(sdf)
+        # sdf = (sdf-np.min(sdf))/(np.max(sdf)-np.min(sdf))
         sdf = np.clip(sdf, a_min=-0.2, a_max=0.2)
+        sdf = sdf*5
         return sdf
 
     @staticmethod
@@ -40,11 +43,13 @@ class ShapeNetV3SDF(BaseShapeNet):
         return sdf
 
     def transform(self, sdf):
+        # sdf = np.transpose(sdf, axes=(2, 1, 0))
+        # return sdf
         p = np.random.rand()
         if (p < 0.5):
             return sdf
         sdf = np.transpose(sdf, axes=(2, 1, 0))
         return sdf
 
-    # def __len__(self):
-    #     return 1000
+    def __len__(self):
+        return 1000

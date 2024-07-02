@@ -108,6 +108,9 @@ class ModelTrainer:
             # visualization step
             if (iteration % self.training_config["visualize_every"] == (self.training_config["visualize_every"] - 1) or intial_pass):
                 visuals = self.model.prepare_visuals()
+                # text = self.model.prepare_text_visuals()
+                # self.logger.log_text(
+                #     tag=f"Train/Predicions", text=text, iteration=iteration)
                 self.visualizer.visualize(visuals, epoch, iteration)
 
             # log writer

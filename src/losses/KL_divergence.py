@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class KLDivergence(nn.Module):
-    def __init__(self, reduction='sum'):
+    def __init__(self, reduction='mean'):
         super(KLDivergence, self).__init__()
         self.reduction = reduction
         # self.kl_loss = nn.KLDivLoss(reduction="batchmean")
@@ -17,7 +17,9 @@ class KLDivergence(nn.Module):
         logvar = torch.clamp(logvar, -30, 20)
         loss = -0.5 * torch.sum(1 + logvar.flatten(1) - mu.flatten(1).pow(2) -
                                 logvar.flatten(1).exp(), dim=1)
-
+        # loss = -0.5 * torch.mean(1 + logvar.flatten(1) - mu.flatten(1).pow(2) -
+        #                          logvar.flatten(1).exp())
+        # return loss
         # loss = loss / mu.flatten(1).shape[1]
         if self.reduction == 'mean':
             return torch.mean(loss, dim=0)
