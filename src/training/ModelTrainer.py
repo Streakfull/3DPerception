@@ -91,7 +91,7 @@ class ModelTrainer:
             self._add_losses_to_dict(train_loss_running)
             batch_iteration += 1
 
-            if (False and batch_idx in metric_batch_indices and not self.is_overfit):
+            if (batch_idx in metric_batch_indices and not self.is_overfit):
                 cprint.ok(
                     f"Calculating additional metrics for training batch {batch_idx}")
                 additional_metrics = self.model.calculate_additional_metrics()

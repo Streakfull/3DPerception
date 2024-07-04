@@ -34,10 +34,11 @@ class GlobalPVQVAE(BaseModel):
 
         self.set_metrics()
         self.optimizer = optim.Adam(
-            self.parameters(), lr=configs['lr'], betas=(0.5, 0.9))
+            [p for p in self.parameters() if p.requires_grad == True], lr=configs['lr'], betas=(0.5, 0.9))
         self.scheduler = optim.lr_scheduler.StepLR(
             self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
-        self.criterion = VQLoss()
+        self.criterion = VQLoss(
+            vgg_checkpoint=configs['vgg_ckpt'], perceptual_weight=1)
         self.resolution = configs["auto_encoder_networks"]["resolution"]
 
         # setup hyper-params
@@ -109,11 +110,13 @@ class GlobalPVQVAE(BaseModel):
             return self.x_recon
 
     def set_loss(self):
-        loss, reconst_loss, codebook_loss = self.criterion(
+        loss_dict = self.criterion(
             self.qloss, self.x_recon, self.x)
-        self.loss = loss
-        self.reconst_loss = reconst_loss
-        self.codebook_loss = codebook_loss
+
+        self.loss = loss_dict["loss"]
+        self.reconst_loss = loss_dict["l1"]
+        self.codebook_loss = loss_dict["codebook"]
+        self.p_loss = loss_dict["p"]
 
     def backward(self):
         self.set_loss()
@@ -127,7 +130,7 @@ class GlobalPVQVAE(BaseModel):
         self.optimizer.step()
 
     def get_metrics(self, apply_additional_metrics=False):
-        return {'loss': self.loss.data, 'codebook': self.codebook_loss.data, 'l1': self.reconst_loss}
+        return {'loss': self.loss.data, 'codebook': self.codebook_loss.data, 'l1': self.reconst_loss, 'p': self.p_loss}
 
     def calculate_additional_metrics(self):
         metrics = {}
