@@ -9,6 +9,7 @@ from src.utils.model_utils import init_weights
 from einops import rearrange
 from torch import nn, optim
 import torch
+from termcolor import cprint
 
 
 class GlobalPVQVAE(BaseModel):
@@ -37,8 +38,8 @@ class GlobalPVQVAE(BaseModel):
             [p for p in self.parameters() if p.requires_grad == True], lr=configs['lr'], betas=(0.5, 0.9))
         self.scheduler = optim.lr_scheduler.StepLR(
             self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
-        self.criterion = VQLoss(
-            vgg_checkpoint=configs['vgg_ckpt'], perceptual_weight=1)
+        # self.criterion = VQLoss(
+        #     vgg_checkpoint=configs['vgg_ckpt'], perceptual_weight=1)
         self.resolution = configs["auto_encoder_networks"]["resolution"]
 
         # setup hyper-params
@@ -163,3 +164,14 @@ class GlobalPVQVAE(BaseModel):
                         d1=z_spatial_dim, d2=z_spatial_dim, d3=z_spatial_dim)
         dec = self.decode(z_q)
         return dec
+
+    def load_ckpt(self, ckpt_path):
+        state_dict = torch.load(ckpt_path)
+        state_dict_copy = {}
+        for key in state_dict.keys():
+            if "criterion" in key:
+                continue
+            state_dict_copy[key] = state_dict[key]
+
+        self.load_state_dict(state_dict_copy)
+        cprint(f"Model loaded from {ckpt_path}")
