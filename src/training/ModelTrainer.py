@@ -129,7 +129,9 @@ class ModelTrainer:
                 # self.logger.add_scalar(
                 #     "Train/L1Weight", self.model.reconst_weight, iteration)
                 self.logger.add_scalar(
-                    "Train/LR", self.model.optimizer.param_groups[0]['lr'], iteration)
+                    "Train/LR_AE", self.model.opt_ae.param_groups[0]['lr'], iteration)
+                self.logger.add_scalar(
+                    "Train/LR_Disc", self.model.opt_disc.param_groups[0]['lr'], iteration)
                 self._add_scalars(avg_train_loss, iteration)
                 self.train_vars.last_loss = avg_train_loss
                 train_loss_running = self._init_train_loss_dict()

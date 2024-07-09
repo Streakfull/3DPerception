@@ -1,5 +1,6 @@
 from torch import nn
 from src.losses.VQ_loss import VQLoss
+from src.losses.VQLossDisc import VQLossDisc
 from src.blocks.quantizer import VectorQuantizer
 from src.blocks.encoder import Encoder
 from src.models.base_model import BaseModel
@@ -34,13 +35,24 @@ class GlobalPVQVAE(BaseModel):
             in_channels=self.embed_dim, out_channels=self.encoder.out_channels, kernel_size=1)
 
         self.set_metrics()
-        self.optimizer = optim.Adam(
-            [p for p in self.parameters() if p.requires_grad == True], lr=configs['lr'], betas=(0.5, 0.9))
-        self.scheduler = optim.lr_scheduler.StepLR(
-            self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
-        # self.criterion = VQLoss(
-        #     vgg_checkpoint=configs['vgg_ckpt'], perceptual_weight=1)
+        self.criterion = VQLossDisc(
+            vgg_checkpoint=configs['vgg_ckpt'], perceptual_weight=1
+        )
         self.resolution = configs["auto_encoder_networks"]["resolution"]
+
+        self.opt_ae = torch.optim.Adam(list(self.encoder.parameters()) +
+                                       list(self.decoder.parameters()) +
+                                       list(self.quantize.parameters()) +
+                                       list(self.quant_conv.parameters()) +
+                                       list(self.post_quant_conv.parameters()),
+                                       lr=self.configs["lr"], betas=(0.5, 0.9))
+        self.scheduler = optim.lr_scheduler.StepLR(
+            self.opt_ae, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
+
+        self.opt_disc = torch.optim.Adam(self.criterion.discriminator.parameters(),
+                                         lr=self.configs["lr"], betas=(0.5, 0.9))
+        self.schedulerDisc = optim.lr_scheduler.StepLR(
+            self.opt_disc, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
 
         # setup hyper-params
         nC = self.resolution
@@ -112,12 +124,15 @@ class GlobalPVQVAE(BaseModel):
 
     def set_loss(self):
         loss_dict = self.criterion(
-            self.qloss, self.x_recon, self.x)
+            self.qloss, self.x_recon, self.x, last_layer=self.get_last_layer(), global_step=self.iteration)
 
         self.loss = loss_dict["loss"]
         self.reconst_loss = loss_dict["l1"]
         self.codebook_loss = loss_dict["codebook"]
         self.p_loss = loss_dict["p"]
+        self.disc_factor = loss_dict["disc_factor"]
+        self.disc_loss = loss_dict["g_loss"]
+        self.d_weight = loss_dict["d_weight"]
 
     def backward(self):
         self.set_loss()
@@ -125,13 +140,19 @@ class GlobalPVQVAE(BaseModel):
 
     def step(self, x):
         self.train()
-        self.optimizer.zero_grad()
+        self.opt_ae.zero_grad()
         x = self.forward(x)
         self.backward()
-        self.optimizer.step()
+        self.opt_ae.step()
 
     def get_metrics(self, apply_additional_metrics=False):
-        return {'loss': self.loss.data, 'codebook': self.codebook_loss.data, 'l1': self.reconst_loss, 'p': self.p_loss}
+        return {'loss': self.loss.data,
+                'codebook': self.codebook_loss.data,
+                'l1': self.reconst_loss,
+                'p': self.p_loss,
+                'disc_factor': self.disc_factor,
+                'disc_loss': self.disc_loss,
+                'd_weight': self.d_weight}
 
     def calculate_additional_metrics(self):
         metrics = {}
@@ -169,9 +190,21 @@ class GlobalPVQVAE(BaseModel):
         state_dict = torch.load(ckpt_path)
         state_dict_copy = {}
         for key in state_dict.keys():
-            if "criterion" in key:
-                continue
+            # if "criterion" in key:
+            #     continue
             state_dict_copy[key] = state_dict[key]
 
         self.load_state_dict(state_dict_copy)
         cprint(f"Model loaded from {ckpt_path}")
+
+    def get_last_layer(self):
+        return self.decoder.conv_out.weight
+
+    def update_lr(self):
+        self.scheduler.step()
+        lr = self.opt_ae.param_groups[0]['lr']
+        cprint('[*] learning rate for opt_ae = %.7f' % lr, "yellow")
+
+        self.schedulerDisc.step()
+        lr = self.opt_disc.param_groups[0]['lr']
+        cprint('[*] learning rate for opt_disc = %.7f' % lr, "yellow")
