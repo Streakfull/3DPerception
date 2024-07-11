@@ -36,7 +36,8 @@ class GlobalPVQVAE(BaseModel):
 
         self.set_metrics()
         self.criterion = VQLossDisc(
-            vgg_checkpoint=configs['vgg_ckpt'], perceptual_weight=1
+            vgg_checkpoint=configs['vgg_ckpt'], perceptual_weight=1, disc_weight=self.configs["disc_weight"],
+            disc_start=self.configs['disc_start']
         )
         self.resolution = configs["auto_encoder_networks"]["resolution"]
 
@@ -131,19 +132,29 @@ class GlobalPVQVAE(BaseModel):
         self.codebook_loss = loss_dict["codebook"]
         self.p_loss = loss_dict["p"]
         self.disc_factor = loss_dict["disc_factor"]
-        self.disc_loss = loss_dict["g_loss"]
+        self.g_loss = loss_dict["g_loss"]
         self.d_weight = loss_dict["d_weight"]
+
+        d_loss, loss_dict = self.criterion(
+            self.qloss, self.x_recon, self.x, last_layer=self.get_last_layer(), global_step=self.iteration, optimizer_idx=1)
+        self.d_loss = d_loss
+        self.d_loss_copy = loss_dict['disc_loss']
+        self.logits_real = loss_dict['logits_real']
+        self.logits_fake = loss_dict['logits_fake']
 
     def backward(self):
         self.set_loss()
         self.loss.backward()
+        self.d_loss.backward()
 
     def step(self, x):
         self.train()
         self.opt_ae.zero_grad()
+        self.opt_disc.zero_grad()
         x = self.forward(x)
         self.backward()
         self.opt_ae.step()
+        self.opt_disc.step()
 
     def get_metrics(self, apply_additional_metrics=False):
         return {'loss': self.loss.data,
@@ -151,8 +162,11 @@ class GlobalPVQVAE(BaseModel):
                 'l1': self.reconst_loss,
                 'p': self.p_loss,
                 'disc_factor': self.disc_factor,
-                'disc_loss': self.disc_loss,
-                'd_weight': self.d_weight}
+                'g_loss': self.g_loss,
+                'd_weight': self.d_weight,
+                'disc_loss': self.d_loss_copy,
+                'logits_real': self.logits_real,
+                'logits_fake': self.logits_fake}
 
     def calculate_additional_metrics(self):
         metrics = {}
@@ -194,7 +208,7 @@ class GlobalPVQVAE(BaseModel):
             #     continue
             state_dict_copy[key] = state_dict[key]
 
-        self.load_state_dict(state_dict_copy)
+        self.load_state_dict(state_dict_copy, strict=False)
         cprint(f"Model loaded from {ckpt_path}")
 
     def get_last_layer(self):

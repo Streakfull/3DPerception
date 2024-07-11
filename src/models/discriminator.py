@@ -27,10 +27,10 @@ class NLayerDiscriminator(nn.Module):
         super(NLayerDiscriminator, self).__init__()
         norm_layer = nn.BatchNorm3d
         use_bias = False
-        kw = 4
+        kw = 3
         padw = 1
         sequence = [nn.Conv3d(input_nc, ndf, kernel_size=kw,
-                              stride=3, padding=padw), nn.LeakyReLU(0.2, True)]
+                              stride=2, padding=padw), nn.LeakyReLU(0.2, True)]
         nf_mult = 1
         nf_mult_prev = 1
         for n in range(1, n_layers):  # gradually increase the number of filters
@@ -47,15 +47,19 @@ class NLayerDiscriminator(nn.Module):
         nf_mult = min(2 ** n_layers, 8)
         sequence += [
             nn.Conv3d(ndf * nf_mult_prev, ndf * nf_mult,
-                      kernel_size=kw, stride=2, padding=padw, bias=use_bias),
+                      kernel_size=kw, stride=1, padding=padw, bias=use_bias),
             norm_layer(ndf * nf_mult),
             nn.LeakyReLU(0.2, True)
         ]
 
         sequence += [
-            nn.Conv3d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+            nn.Conv3d(ndf * nf_mult, 4, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
         self.main = nn.Sequential(*sequence)
+        self.linear = nn.Linear(4*512, 1)
 
     def forward(self, input):
         """Standard forward."""
-        return self.main(input)
+        conv = self.main(input)
+        conv = conv.flatten(1)
+        conv = self.linear(conv)
+        return conv

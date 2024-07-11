@@ -26,12 +26,12 @@ def vanilla_d_loss(logits_real, logits_fake):
 
 
 class VQLossDisc(nn.Module):
-    def __init__(self, codebook_weight=1.0, vgg_checkpoint=" logs/VGG/trainFull/2024_07_01_17_50_17/checkpoints/epoch-36.ckpt", perceptual_weight=0, disc_weight=1,
-                 disc_loss="hinge", disc_start=500, disc_factor=1):
+    def __init__(self, codebook_weight=1.0, vgg_checkpoint=" logs/VGG/trainFull/2024_07_01_17_50_17/checkpoints/epoch-36.ckpt", perceptual_weight=0, disc_weight=0.8,
+                 disc_loss="hinge", disc_start=25001, disc_factor=1):
         super().__init__()
         self.codebook_weight = codebook_weight
         self.perceptual_weight = 1
-        self.disc_weight = 1
+        self.discriminator_weight = disc_weight
         if (self.perceptual_weight > 0):
             self.LPIPIS = LPIPS(ckpt_path=vgg_checkpoint).eval()
         self.discriminator = NLayerDiscriminator(input_nc=1,
@@ -41,12 +41,12 @@ class VQLossDisc(nn.Module):
                                                  ).apply(weights_init)
         self.discriminator_iter_start = disc_start
         self.disc_factor = disc_factor
-        self.discriminator_weight = disc_weight
+        self.bce = nn.BCEWithLogitsLoss()
 
         if disc_loss == "hinge":
-            self.disc_loss = hinge_d_loss
+            self.d_loss = hinge_d_loss
         elif disc_loss == "vanilla":
-            self.disc_loss = vanilla_d_loss
+            self.d_loss = vanilla_d_loss
         else:
             raise ValueError(f"Unknown GAN loss '{disc_loss}'.")
 
@@ -68,7 +68,7 @@ class VQLossDisc(nn.Module):
         if (optimizer_idx == 0):
             return self.ae_loss(inputs, reconstructions, codebook_loss, last_layer, global_step)
         else:
-            return self.disc_loss()
+            return self.disc_loss(inputs, reconstructions, global_step)
 
     def ae_loss(self, inputs, reconstructions, codebook_loss, last_layer, global_step):
         rec_loss = torch.abs(inputs.contiguous() -
@@ -83,7 +83,8 @@ class VQLossDisc(nn.Module):
         nll_loss = torch.mean(rec_loss)
 
         logits_fake = self.discriminator(reconstructions.contiguous())
-        g_loss = -torch.mean(logits_fake)
+        g_loss = self.bce(logits_fake, torch.ones_like(
+            logits_fake).to(logits_fake.device))
 
         try:
             d_weight = self.calculate_adaptive_weight(
@@ -104,5 +105,18 @@ class VQLossDisc(nn.Module):
                 "g_loss": g_loss.detach().mean()
                 }
 
-    def disc_loss(self):
-        return None
+    def disc_loss(self, inputs, reconstructions, global_step):
+        logits_real = self.discriminator(inputs.contiguous().detach())
+        logits_fake = self.discriminator(reconstructions.contiguous().detach())
+
+        disc_factor = adopt_weight(
+            self.disc_factor, global_step, threshold=self.discriminator_iter_start)
+        d_loss = self.d_loss(logits_real, logits_fake)
+        d_loss_copy = d_loss.detach().mean()
+        d_loss = disc_factor * d_loss
+
+        log = {"disc_loss": d_loss_copy.clone().detach().mean(),
+               "logits_real": logits_real.detach().mean(),
+               "logits_fake": logits_fake.detach().mean()
+               }
+        return d_loss, log

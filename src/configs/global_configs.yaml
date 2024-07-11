@@ -11,7 +11,7 @@ training:
  # experiment_id: vae256x8x128EncoderLinearLinearAttn
   #experiment_id: resNetDecoderx5sdf
   #experiment_id: 512LSChairNoSlope
-  experiment_id: Dev
+  experiment_id: LinearDiscExp3G1.0e-2@25kBoth
   ##experiment_id: None
   extra_notes: none
   logs_dir: logs
@@ -22,15 +22,15 @@ training:
   test_size: 0.1
   n_epochs: 50000
   append_loss_every: 250
-  print_every: 10
+  print_every: 500
   validate_every: 1973
   save_every: 1973
-  save_every_nepochs: 2
+  save_every_nepochs: 5
   start_epoch: 0
   start_iteration: 0
   visualize_every: 1000
   apply_metrics_every: 1973
-  load_ckpt: False
+  load_ckpt: True
   #ckpt_path: logs/VaeTry2/8*8*8**FullTrain/2024_05_21_03_41_13/checkpoints/epoch-74.ckpt
   #ckpt_path: logs/pvqVAE/pvqVAE-Train/2024_05_26_02_46_01/checkpoints/epoch-114.ckpt # PatchedPVQVAE
   #ckpt_path: logs/pvqVAE/pvqVAE-RandTransformerTrain2/2024_05_27_03_34_37/checkpoints/epoch-500.ckpt #16bs tran
@@ -42,7 +42,8 @@ training:
   ckpt_path: logs/vaeKosmoBa2a/Cars256KL/2024_06_24_19_39_11/checkpoints/epoch-14.ckpt
   ckpt_path: logs/vaeKosmoBa2a/Chairs256ConvLinear/2024_06_24_22_16_25/checkpoints/epoch-44.ckpt
   ckpt_path: logs/vaeKosmomeinOmo/Chairs2048FullConvWithDataAug/2024_06_25_12_15_40/checkpoints/epoch-latest.ckpt
-  ckpt_path: logs/globalPVQVAEVGG/fullTrain/2024_07_03_12_16_57/checkpoints/epoch-latest.ckpt
+  
+  #ckpt_path: logs/globalPVQVAEVGG/fullTrain/2024_07_03_12_16_57/checkpoints/epoch-20.ckpt
  # ckpt_path: logs/vaeKosmomeinOmo/Chairs2048FullConvWithDataAugContinueHighKL/2024_06_26_14_42_05/checkpoints/epoch-26.ckpt
   #ckpt_path: logs/vaeKosmomeinOmo/Chairs2048FullConvWithDataAugCont2/2024_06_26_22_05_43/checkpoints/epoch-28.ckpt
   #ckpt_path: logs/vaeKosmomeinOmo/1000Chair24x8KLStep/2024_06_27_06_17_13/checkpoints/epoch-162.ckpt
@@ -61,7 +62,10 @@ training:
   #ckpt_path: logs/simpleVAE/resnetDecoderKLContinue2/2024_06_30_09_12_57/checkpoints/epoch-200.ckpt
   #ckpt_path: logs/simpleVAE/resnetDecoderKLContinue2/2024_06_30_09_12_57/checkpoints/epoch-350.ckpt
 
-  
+
+
+  ckpt_path: logs/globalPVQVAEVGG/fullTrain/2024_07_03_12_16_57/checkpoints/epoch-latest.ckpt
+  #ckpt_path: logs/globalPVQVAEVGGDisc/LinearDiscFullTrain/2024_07_10_02_46_20/checkpoints/epoch-latest.ckpt
   
   
   use_scheduler: True
@@ -261,8 +265,9 @@ model:
     model_filepath: src/models/global_pvqvae.py
     model_class: GlobalPVQVAE
     metrics: iou,chamferDistance   # None | iou | chamferDistance
-    losses: "l1,codebook,p,disc_factor,disc_loss,d_weight" #additional loss names
-    lr: 1.0e-4
+    losses: "l1,codebook,p,disc_factor,g_loss,d_weight,disc_loss,logits_real,logits_fake" #additional loss names
+    #lr: 1.0e-4
+    lr: 4.5e-6
     criterion: L1
     scheduler_step_size: 30
     scheduler_gamma: 0.5
@@ -271,6 +276,8 @@ model:
     embed_dim: 256
     n_embed: 512
     vgg_ckpt: logs/VGG/trainFull/2024_07_01_17_50_17/checkpoints/epoch-36.ckpt
+    disc_weight: 1.0e-2
+    disc_start: 25001
     auto_encoder_networks:
       in_channels: 1
       out_channels: 256
