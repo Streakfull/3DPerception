@@ -12,7 +12,7 @@ class ShapeNetV3SDF(BaseShapeNet):
     def __getitem__(self, index):
         shape_key, class_index, class_name, id = super().__getitem__(index)
         sdf = self.get_shape_sdf(shape_key)
-        sdf = self.transform(sdf)
+        # sdf = self.transform(sdf)
         return {
             "sdf": sdf[np.newaxis, :, :, :],
             "label": class_index,

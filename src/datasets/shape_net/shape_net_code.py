@@ -35,9 +35,9 @@ class ShapeNetCode(BaseShapeNet):
         code_ix = np.load(f"{self.dataset_path}/{shape_key}/codeix.npy")
         code = np.load(f"{self.dataset_path}/{shape_key}/code.npy")
         code_ix_global = np.load(
-            f"{self.dataset_path}/{shape_key}/global_codeix.npy")
+            f"{self.dataset_path}/{shape_key}/global_codeix_gan.npy")
         code_global = np.load(
-            f"{self.dataset_path}/{shape_key}/global_code.npy")
+            f"{self.dataset_path}/{shape_key}/global_code_gan.npy")
         return code, code_ix, code_global, code_ix_global,
 
     def get_shape_sdf(self, shapenet_key):

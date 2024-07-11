@@ -193,7 +193,8 @@ class GlobalPVQVAE(BaseModel):
     def decode_enc_idices(self, enc_indices, z_spatial_dim=8):
 
         # for transformer
-        enc_indices = rearrange(enc_indices, 't bs -> (bs t)')
+       # enc_indices = rearrange(enc_indices, 't bs -> (bs t)')
+        enc_indices = rearrange(enc_indices, 'bs t -> (bs t)')
         z_q = self.quantize.embedding(enc_indices)  # (bs t) zd
         z_q = rearrange(z_q, '(bs d1 d2 d3) zd -> bs zd d1 d2 d3',
                         d1=z_spatial_dim, d2=z_spatial_dim, d3=z_spatial_dim)

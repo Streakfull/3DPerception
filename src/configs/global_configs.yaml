@@ -11,13 +11,13 @@ training:
  # experiment_id: vae256x8x128EncoderLinearLinearAttn
   #experiment_id: resNetDecoderx5sdf
   #experiment_id: 512LSChairNoSlope
-  experiment_id: LinearDiscExp3G1.0e-2@25kBoth
-  ##experiment_id: None
+ # experiment_id: LinearDiscExp3G1.0e-2@25kBoth
+  experiment_id: vis
   extra_notes: none
   logs_dir: logs
   is_train: true
   device: cuda:0
-  batch_size: 3
+  batch_size: 16
   num_workers: 16
   test_size: 0.1
   n_epochs: 50000
@@ -66,13 +66,15 @@ training:
 
   ckpt_path: logs/globalPVQVAEVGG/fullTrain/2024_07_03_12_16_57/checkpoints/epoch-latest.ckpt
   #ckpt_path: logs/globalPVQVAEVGGDisc/LinearDiscFullTrain/2024_07_10_02_46_20/checkpoints/epoch-latest.ckpt
-  
+  #ckpt_path: logs/globalPVQVAEVGGDisc/LinearDiscExp1G1.0e-2@4k/2024_07_10_09_17_17/checkpoints/epoch-best.ckpt
+  #ckpt_path: logs/globalPVQVAEVGGDisc/LinearDiscExp3G1.0e-2@25kBoth/2024_07_10_19_13_37/checkpoints/epoch-50.ckpt
+  ckpt_path: logs/globalPVQVAEVGGDisc/LinearDiscExp3G1.0e-2@25kBoth/2024_07_10_19_13_37/checkpoints/epoch-best.ckpt
   
   use_scheduler: True
   apply_metrics_batch_count: 5 # number of batches to apply additional metrics on
 #2024_05_16_20_23_24 id
 dataset:
-  dataset_field: shape_net_v3_sdf
+  dataset_field: shape_net_code
   path: ../../datasets/shapenet_orig/ShapeNetCore.v2  # For local testing without downloading shape => change to local_raw_dataset/ShapeNet
     # Can be overriden by dataset specific path
   overfit_size: 1

@@ -74,8 +74,9 @@ class ExtractSnetIndices:
                     z_q_i = z_q[i]
                     z_q_indices_i = z_q_indices[i]
                     base_path = batch["path"][i]
-                    np.save(f"{base_path}/global_code.npy", z_q_i)
-                    np.save(f"{base_path}/global_codeix.npy", z_q_indices_i)
+                    np.save(f"{base_path}/global_code_gan.npy", z_q_i)
+                    np.save(f"{base_path}/global_codeix_gan.npy",
+                            z_q_indices_i)
 
     def _set_device(self):
         self.device = torch.device('cpu')
