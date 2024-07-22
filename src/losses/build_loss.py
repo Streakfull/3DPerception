@@ -5,6 +5,7 @@ import torch
 from src.losses.L1_loss import L1
 
 
+# TODO: Add VQ losses here
 class BuildLoss:
     def __init__(self, configs):
         self.configs = configs

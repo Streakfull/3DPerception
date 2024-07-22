@@ -58,9 +58,6 @@ class BaseModel(torch.nn.Module):
         return 0
 
     def update_lr(self):
-        # if (self.epoch > 10 and self.optimizer.param_groups[0]['lr'] == 1e-4):
-        #     self.optimizer.param_groups[0]['lr'] = 1e-3
-        #     return
         if (self.scheduler is None):
             return
         self.scheduler.step()

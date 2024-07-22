@@ -14,14 +14,14 @@ class AutoEncoder(BaseModel):
         decoder_config["in_channels"] = self.encoder.out_channels
         self.decoder = Decoder(**decoder_config)
         self.criterion = BuildLoss(configs).get_loss()
-        # self.optimizer = optim.Adam(params=self.parameters(), lr=configs["lr"])
-        # self.scheduler = optim.lr_scheduler.StepLR(
-        # self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
+        self.optimizer = optim.Adam(params=self.parameters(), lr=configs["lr"])
+        self.scheduler = optim.lr_scheduler.StepLR(
+            self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
         self.configs = configs
         init_type = self.configs['weight_init']
-        # if (init_type != "None"):
-        #     print("Initializing model weights with %s initialization" % init_type)
-        #     self.init_weights()
+        if (init_type != "None"):
+            print("Initializing model weights with %s initialization" % init_type)
+            self.init_weights()
         self.set_metrics()
 
     def forward(self, x):

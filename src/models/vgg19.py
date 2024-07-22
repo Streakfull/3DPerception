@@ -68,12 +68,11 @@ class VGG16(BaseModel):
         out = self.layer3(out)
         out = self.layer4(out)
         vgg16_features = self.layer5(out)
-        return vgg16_features
-        # out = vgg16_features.view(out.size(0), -1)
-        # out = self.layer6(out)
-        # out = self.layer7(out)
-        # self.out = self.layer8(out)
-        # return self.out, vgg16_features
+        out = vgg16_features.view(out.size(0), -1)
+        out = self.layer6(out)
+        out = self.layer7(out)
+        self.out = self.layer8(out)
+        return self.out, vgg16_features
 
     def backward(self):
         self.set_loss()

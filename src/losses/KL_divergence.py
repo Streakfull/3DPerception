@@ -10,17 +10,10 @@ class KLDivergence(nn.Module):
         # self.kl_loss = nn.KLDivLoss(reduction="batchmean")
 
     def forward(self, mu, logvar):
-
-        # loss = -0.5 * torch.sum(1 + logvar.flatten(1) - mu.flatten(1).pow(2) -
-        #                         logvar.flatten(1).exp(), dim=1)
-        mu = torch.clamp(mu, -30, 20)
-        logvar = torch.clamp(logvar, -30, 20)
-        loss = -0.5 * torch.sum(1 + logvar.flatten(1) - mu.flatten(1).pow(2) -
-                                logvar.flatten(1).exp(), dim=1)
-        # loss = -0.5 * torch.mean(1 + logvar.flatten(1) - mu.flatten(1).pow(2) -
-        #                          logvar.flatten(1).exp())
-        # return loss
-        # loss = loss / mu.flatten(1).shape[1]
+        var = torch.exp(logvar)
+        loss = 0.5 * torch.sum(torch.pow(mu, 2)
+                               + var - 1.0 - logvar,
+                               dim=[1, 2, 3, 4])
         if self.reduction == 'mean':
             return torch.mean(loss, dim=0)
         elif self.reduction == 'sum':
@@ -29,10 +22,3 @@ class KLDivergence(nn.Module):
             return loss
         else:
             raise Exception('Unexpected reduction {}'.format(self.reduction))
-
-    # def forward(self, z):
-    #     z = z.flatten(1)
-    #     target = F.softmax(torch.rand_like(z), dim=1)
-    #     z = F.log_softmax(z, dim=1)
-    #     return self.kl_loss(z, target)
-    # # input =

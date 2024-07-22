@@ -7,8 +7,7 @@ class VQLoss(nn.Module):
     def __init__(self, codebook_weight=1.0, vgg_checkpoint=" logs/VGG/trainFull/2024_07_01_17_50_17/checkpoints/epoch-36.ckpt", perceptual_weight=0):
         super().__init__()
         self.codebook_weight = codebook_weight
-        self.perceptual_weight = 1
-        self.disc_weight = 1
+        self.perceptual_weight = perceptual_weight
         if (self.perceptual_weight > 0):
             self.LPIPIS = LPIPS(ckpt_path=vgg_checkpoint).eval()
 
