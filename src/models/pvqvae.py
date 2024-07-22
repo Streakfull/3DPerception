@@ -39,7 +39,7 @@ class PVQVAE(BaseModel):
             self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
         self.criterion = VQLoss()
         self.resolution = configs["auto_encoder_networks"]["resolution"]
-        self.cur_bs = 16
+        self.cur_bs = 4
         # setup hyper-params
         nC = self.resolution
         self.cube_size = 2 ** self.n_down  # patch_size
@@ -142,11 +142,13 @@ class PVQVAE(BaseModel):
             return self.x_recon
 
     def set_loss(self):
-        loss, reconst_loss, codebook_loss = self.criterion(
-            self.qloss, self.x_recon, self.x)
-        self.loss = loss
-        self.reconst_loss = reconst_loss
-        self.codebook_loss = codebook_loss
+        loss_dict = self.criterion(
+            self.qloss, self.x_recon, self.x, last_layer=self.get_last_layer(), global_step=self.iteration)
+
+        self.loss = loss_dict["loss"]
+        self.reconst_loss = loss_dict["l1"]
+        self.codebook_loss = loss_dict["codebook"]
+        self.p_loss = loss_dict["p"]
 
     def backward(self):
         self.set_loss()
@@ -193,3 +195,6 @@ class PVQVAE(BaseModel):
                         d1=z_spatial_dim, d2=z_spatial_dim, d3=z_spatial_dim)
         dec = self.decode(z_q)
         return dec
+
+    def get_last_layer(self):
+        return self.decoder.conv_out.weight
