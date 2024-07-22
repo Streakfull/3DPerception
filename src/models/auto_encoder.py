@@ -4,6 +4,7 @@ from src.blocks.decoder import Decoder
 from torch import optim
 from src.losses.build_loss import BuildLoss
 from src.utils.model_utils import init_weights
+from torch import nn
 
 
 class AutoEncoder(BaseModel):
@@ -14,6 +15,7 @@ class AutoEncoder(BaseModel):
         decoder_config["in_channels"] = self.encoder.out_channels
         self.decoder = Decoder(**decoder_config)
         self.criterion = BuildLoss(configs).get_loss()
+
         self.optimizer = optim.Adam(params=self.parameters(), lr=configs["lr"])
         self.scheduler = optim.lr_scheduler.StepLR(
             self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
@@ -67,3 +69,19 @@ class AutoEncoder(BaseModel):
 
     def get_batch_input(self, x):
         return x['sdf']
+
+    def prepare_visuals(self):
+        visuals = {
+            "reconstructions": self.predictions,
+            "target": self.target,
+
+
+        }
+        return visuals
+
+    def calculate_additional_metrics(self):
+        metrics = {}
+        for metric in self.metrics:
+            value = metric[1].calc_batch(self.predictions, self.target)
+            metrics[metric[0]] = value
+        return metrics

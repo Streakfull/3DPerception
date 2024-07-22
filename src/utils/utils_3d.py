@@ -33,10 +33,10 @@ from pytorch3d.renderer import (
 from pytorch3d.transforms import RotateAxisAngle
 from pytorch3d.structures import Meshes
 import torch
-
+from omegaconf import OmegaConf
 
 configs_path = "src/configs/global_configs.yaml"
-configs = yaml.safe_load(configs_path)
+configs = OmegaConf.load(configs_path)
 
 
 def init_mesh_renderer(image_size=512, dist=3.5, elev=90, azim=90, camera='0', device='cuda:0'):

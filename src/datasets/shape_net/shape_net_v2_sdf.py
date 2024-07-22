@@ -36,3 +36,6 @@ class ShapeNetV2SDF(BaseShapeNet):
     @staticmethod
     def move_batch_to_device(batch, device):
         batch['sdf'] = batch['sdf'].float().to(device)
+
+    # def __len__(self):
+    #     return 1
