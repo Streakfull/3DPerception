@@ -160,7 +160,8 @@ class GlobalPVQVAE(BaseModel):
     def backward(self):
         self.set_loss()
         self.loss.backward()
-        self.d_loss.backward()
+        if (self.use_disc):
+            self.d_loss.backward()
 
     def step(self, x):
         if (self.use_disc):

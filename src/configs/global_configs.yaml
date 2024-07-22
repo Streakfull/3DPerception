@@ -29,7 +29,7 @@ training:
   ckpt_path: v2logs/globalPVQVAELPIPS/FullTrain/2024_07_20_22_29_31/checkpoints/epoch-50.ckpt
 #2024_05_16_20_23_24 id
 dataset:
-  dataset_field: shape_net_code
+  dataset_field: shape_net_v2_sdf
   path: ../../datasets/shapenet_orig/ShapeNetCore.v2  # For local testing without downloading shape => change to local_raw_dataset/ShapeNet
     # Can be overriden by dataset specific path
   overfit_size: 4
@@ -75,7 +75,7 @@ dataset:
     path: src/raw_dataset/ShapeNetDISN/SDF_v1_64
 
 model:
-  model_field:  decoder_transformer
+  model_field:  globalPVQVAE
   dummy_classifier:
     model_filepath: models/dummy_classifier.py
     model_class: DummyClassifier
@@ -220,8 +220,8 @@ model:
     model_class: GlobalPVQVAE
     metrics: iou,chamferDistance   # None | iou | chamferDistance
     losses: "l1,codebook,p,disc_factor,g_loss,d_weight,disc_loss,logits_real,logits_fake" #additional loss names
-    #lr: 1.0e-4
-    lr: 0.5e-4
+    lr: 1.0e-4
+    #lr: 0.5e-4
     disc_lr: 4.5e-6
     criterion: L1
     scheduler_step_size: 30
@@ -232,9 +232,9 @@ model:
     n_embed: 512
     vgg_ckpt: logs/VGG/trainFull/2024_07_01_17_50_17/checkpoints/epoch-36.ckpt
     disc_weight: 1.0e-2
-    perceptual_weight: 1.5
+    perceptual_weight: # 0 | 0.5
     disc_start: 15001
-    use_disc: False
+    use_disc: True
     auto_encoder_networks:
       in_channels: 1
       out_channels: 256

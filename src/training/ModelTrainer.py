@@ -129,7 +129,7 @@ class ModelTrainer:
                     self.logger.add_scalar(
                         "Train/L1Weight", self.model.reconst_weight, iteration)
 
-                if (model_field == "globalPVQVAE" and self.global_configs["globalPVQVAE"]["use_disc"]):
+                if (model_field == "globalPVQVAE" and self.global_configs["model"]["globalPVQVAE"]["use_disc"]):
                     self.logger.add_scalar(
                         "Train/LR_AE", self.model.opt_ae.param_groups[0]['lr'], iteration)
                     self.logger.add_scalar(
