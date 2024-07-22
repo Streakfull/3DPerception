@@ -52,7 +52,7 @@ class VAE(AutoEncoder):
         z = z.flatten(1)
         z = self.dec_in(z)
         z = rearrange(z, 'bs (ch l w h)->bs ch l w h',
-                      ch=self.z_dim, l=4, w=4, h=4)
+                      ch=self.encoder_channels, l=4, w=4, h=4)
         z = nonlinearity(z)
         x = self.decoder(z)
         return x
@@ -66,13 +66,9 @@ class VAE(AutoEncoder):
         self.reconst_loss = self.criterion(
             self.predictions, self.target)
         self.set_kl_weight()
-        if (self.is_vae):
-            self.kl_loss = self.kl(self.mu, self.logvar)
-        else:
-            self.kl_loss = torch.tensor(0, device=self.predictions.device)
+        self.kl_loss = self.kl(self.mu, self.logvar)
         self.loss = (self.reconst_weight*self.reconst_loss) + \
             (self.kl_weight*self.kl_loss)
-        self.signedIou = 0
 
     def set_kl_weight(self):
         if (not self.use_cycles):
