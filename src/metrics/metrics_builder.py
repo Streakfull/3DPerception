@@ -1,4 +1,4 @@
-from src.metrics.chamfer_dist import ChamferDistance
+from src.metrics.pytorch_3d_chamfer_dist import Pytorch3DChamferDistance
 from src.metrics.iou import Iou
 from src.metrics.signed_iou import SignedIou
 
@@ -15,7 +15,7 @@ class Metrics():
                     self.metrics.append(("iou", Iou()))
                 case "chamferDistance":
                     self.metrics.append(
-                        ("chamferDistance", ChamferDistance(apply_center=True)))
+                        ("chamferDistance", Pytorch3DChamferDistance()))
                 case "signedIou":
                     self.metrics.append(("signedIou", SignedIou))
                 case _:

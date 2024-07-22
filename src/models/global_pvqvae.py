@@ -20,10 +20,10 @@ class GlobalPVQVAE(BaseModel):
         decoder_config = configs["auto_encoder_networks"]
         decoder_config["in_channels"] = self.encoder.out_channels
         self.decoder = Decoder(**decoder_config)
-        self.criterion = BuildLoss(configs).get_loss()
         self.n_embed = configs["n_embed"]
         self.embed_dim = configs["embed_dim"]
         self.n_down = len(configs['auto_encoder_networks']['ch_mult'])-1
+        self.use_disc = configs["use_disc"]
         self.quantize = VectorQuantizer(
             n_e=self.n_embed, e_dim=self.embed_dim, beta=1.0)
         self.configs = configs
@@ -35,25 +35,39 @@ class GlobalPVQVAE(BaseModel):
             in_channels=self.embed_dim, out_channels=self.encoder.out_channels, kernel_size=1)
 
         self.set_metrics()
-        self.criterion = VQLossDisc(
-            vgg_checkpoint=configs['vgg_ckpt'], perceptual_weight=1, disc_weight=self.configs["disc_weight"],
-            disc_start=self.configs['disc_start']
-        )
+        if (self.use_disc):
+            self.criterion = VQLossDisc(
+                vgg_checkpoint=configs['vgg_ckpt'], perceptual_weight=configs[
+                    "perceptual_weight"], disc_weight=self.configs["disc_weight"],
+                disc_start=self.configs['disc_start']
+            )
+        else:
+            self.criterion = VQLoss(
+                vgg_checkpoint=configs['vgg_ckpt'], perceptual_weight=configs["perceptual_weight"])
+        self.resolution = configs["auto_encoder_networks"]["resolution"]
         self.resolution = configs["auto_encoder_networks"]["resolution"]
 
-        self.opt_ae = torch.optim.Adam(list(self.encoder.parameters()) +
-                                       list(self.decoder.parameters()) +
-                                       list(self.quantize.parameters()) +
-                                       list(self.quant_conv.parameters()) +
-                                       list(self.post_quant_conv.parameters()),
-                                       lr=self.configs["lr"], betas=(0.5, 0.9))
-        self.scheduler = optim.lr_scheduler.StepLR(
-            self.opt_ae, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
+        if (self.use_disc):
+            self.opt_ae = torch.optim.Adam(list(self.encoder.parameters()) +
+                                           list(self.decoder.parameters()) +
+                                           list(self.quantize.parameters()) +
+                                           list(self.quant_conv.parameters()) +
+                                           list(
+                                               self.post_quant_conv.parameters()),
+                                           lr=self.configs["lr"], betas=(0.5, 0.9))
 
-        self.opt_disc = torch.optim.Adam(self.criterion.discriminator.parameters(),
-                                         lr=4.5e-6, betas=(0.5, 0.9))
-        self.schedulerDisc = optim.lr_scheduler.StepLR(
-            self.opt_disc, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
+            self.scheduler = optim.lr_scheduler.StepLR(
+                self.opt_ae, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
+
+            self.opt_disc = torch.optim.Adam(self.criterion.discriminator.parameters(),
+                                             lr=configs['disc_lr'], betas=(0.5, 0.9))
+            self.schedulerDisc = optim.lr_scheduler.StepLR(
+                self.opt_disc, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
+        else:
+            self.optimizer = optim.Adam(
+                [p for p in self.parameters() if p.requires_grad == True], lr=configs['lr'], betas=(0.5, 0.9))
+            self.scheduler = optim.lr_scheduler.StepLR(
+                self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
 
         # setup hyper-params
         nC = self.resolution
@@ -131,16 +145,17 @@ class GlobalPVQVAE(BaseModel):
         self.reconst_loss = loss_dict["l1"]
         self.codebook_loss = loss_dict["codebook"]
         self.p_loss = loss_dict["p"]
-        self.disc_factor = loss_dict["disc_factor"]
-        self.g_loss = loss_dict["g_loss"]
-        self.d_weight = loss_dict["d_weight"]
+        if (self.use_disc):
+            self.disc_factor = loss_dict["disc_factor"]
+            self.g_loss = loss_dict["g_loss"]
+            self.d_weight = loss_dict["d_weight"]
 
-        d_loss, loss_dict = self.criterion(
-            self.qloss, self.x_recon, self.x, last_layer=self.get_last_layer(), global_step=self.iteration, optimizer_idx=1)
-        self.d_loss = d_loss
-        self.d_loss_copy = loss_dict['disc_loss']
-        self.logits_real = loss_dict['logits_real']
-        self.logits_fake = loss_dict['logits_fake']
+            d_loss, loss_dict = self.criterion(
+                self.qloss, self.x_recon, self.x, last_layer=self.get_last_layer(), global_step=self.iteration, optimizer_idx=1)
+            self.d_loss = d_loss
+            self.d_loss_copy = loss_dict['disc_loss']
+            self.logits_real = loss_dict['logits_real']
+            self.logits_fake = loss_dict['logits_fake']
 
     def backward(self):
         self.set_loss()
@@ -148,6 +163,12 @@ class GlobalPVQVAE(BaseModel):
         self.d_loss.backward()
 
     def step(self, x):
+        if (self.use_disc):
+            self.step_disc(x)
+        else:
+            self.step_vanilla(x)
+
+    def step_disc(self, x):
         self.train()
         self.opt_ae.zero_grad()
         self.opt_disc.zero_grad()
@@ -156,17 +177,27 @@ class GlobalPVQVAE(BaseModel):
         self.opt_ae.step()
         self.opt_disc.step()
 
+    def step_vanilla(self, x):
+        self.train()
+        self.optimizer.zero_grad()
+        x = self.forward(x)
+        self.backward()
+        self.optimizer.step()
+
     def get_metrics(self, apply_additional_metrics=False):
-        return {'loss': self.loss.data,
-                'codebook': self.codebook_loss.data,
-                'l1': self.reconst_loss,
-                'p': self.p_loss,
-                'disc_factor': self.disc_factor,
-                'g_loss': self.g_loss,
-                'd_weight': self.d_weight,
-                'disc_loss': self.d_loss_copy,
-                'logits_real': self.logits_real,
-                'logits_fake': self.logits_fake}
+        if (self.use_disc):
+            return {'loss': self.loss.data,
+                    'codebook': self.codebook_loss.data,
+                    'l1': self.reconst_loss,
+                    'p': self.p_loss,
+                    'disc_factor': self.disc_factor,
+                    'g_loss': self.g_loss,
+                    'd_weight': self.d_weight,
+                    'disc_loss': self.d_loss_copy,
+                    'logits_real': self.logits_real,
+                    'logits_fake': self.logits_fake}
+        else:
+            return {'loss': self.loss.data, 'codebook': self.codebook_loss.data, 'l1': self.reconst_loss, 'p': self.p_loss}
 
     def calculate_additional_metrics(self):
         metrics = {}
@@ -193,8 +224,7 @@ class GlobalPVQVAE(BaseModel):
     def decode_enc_idices(self, enc_indices, z_spatial_dim=8):
 
         # for transformer
-       # enc_indices = rearrange(enc_indices, 't bs -> (bs t)')
-        enc_indices = rearrange(enc_indices, 'bs t -> (bs t)')
+        enc_indices = rearrange(enc_indices, 't bs -> (bs t)')
         z_q = self.quantize.embedding(enc_indices)  # (bs t) zd
         z_q = rearrange(z_q, '(bs d1 d2 d3) zd -> bs zd d1 d2 d3',
                         d1=z_spatial_dim, d2=z_spatial_dim, d3=z_spatial_dim)
@@ -216,10 +246,15 @@ class GlobalPVQVAE(BaseModel):
         return self.decoder.conv_out.weight
 
     def update_lr(self):
-        self.scheduler.step()
-        lr = self.opt_ae.param_groups[0]['lr']
-        cprint('[*] learning rate for opt_ae = %.7f' % lr, "yellow")
+        if (self.use_disc):
+            self.scheduler.step()
+            lr = self.opt_ae.param_groups[0]['lr']
+            cprint('[*] learning rate for opt_ae = %.7f' % lr, "yellow")
 
-        self.schedulerDisc.step()
-        lr = self.opt_disc.param_groups[0]['lr']
-        cprint('[*] learning rate for opt_disc = %.7f' % lr, "yellow")
+            self.schedulerDisc.step()
+            lr = self.opt_disc.param_groups[0]['lr']
+            cprint('[*] learning rate for opt_disc = %.7f' % lr, "yellow")
+        else:
+            self.scheduler.step()
+            lr = self.optimizer.param_groups[0]['lr']
+            cprint('[*] learning rate = %.7f' % lr, "yellow")

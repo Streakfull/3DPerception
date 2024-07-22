@@ -206,7 +206,9 @@ model:
     pvqvae:
       embed_dim: 256
       n_embed: 512
-      ckpt_path: logs/pvqVAE/pvqVAE-Train/2024_05_26_02_46_01/checkpoints/epoch-114.ckpt
+      #ckpt_path: logs/pvqVAE/pvqVAE-Train/2024_05_26_02_46_01/checkpoints/epoch-114.ckpt
+      #ckpt_path: logs/GlobalPVQVAE/FullTrain/2024_06_03_12_37_19/checkpoints/epoch-latest.ckpt
+      ckpt_path: logs/globalPVQVAEVGGDisc/LinearDiscExp3G1.0e-2@25kBoth/2024_07_10_19_13_37/checkpoints/epoch-best.ckpt
     p_encoding:
       init_factor: 10
       pos_dim: 3
@@ -220,6 +222,7 @@ model:
     losses: "l1,codebook,p,disc_factor,g_loss,d_weight,disc_loss,logits_real,logits_fake" #additional loss names
     #lr: 1.0e-4
     lr: 0.5e-4
+    disc_lr: 4.5e-6
     criterion: L1
     scheduler_step_size: 30
     scheduler_gamma: 0.5
@@ -229,7 +232,9 @@ model:
     n_embed: 512
     vgg_ckpt: logs/VGG/trainFull/2024_07_01_17_50_17/checkpoints/epoch-36.ckpt
     disc_weight: 1.0e-2
+    perceptual_weight: 1.5
     disc_start: 15001
+    use_disc: True
     auto_encoder_networks:
       in_channels: 1
       out_channels: 256

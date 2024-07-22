@@ -28,7 +28,6 @@ class ShapeNetV2SDF(BaseShapeNet):
             sdf = np.clip(sdf, a_min=-0.2, a_max=0.2)
             sdf = sdf * 5
         except:
-            print("Y NOT FOUND")
             y = f"{self.dataset_path}/{shapenet_key}"
             sdf = np.zeros((64, 64, 64))
 

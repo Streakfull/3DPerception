@@ -60,11 +60,6 @@ class ModelTrainer:
         metric_batch_indices = np.random.randint(len(
             self.train_dataloader), size=self.training_config["apply_metrics_batch_count"])
 
-        # enumeration = self.tqdm(
-        #     enumerate(self.train_dataloader), total=len(self.train_dataloader))
-
-        # if (self.is_overfit):
-        #     enumeration = enumerate(self.train_dataloader)
         enumartion = None
         if (self.is_overfit):
             enumartion = enumerate(self.train_dataloader)
@@ -108,9 +103,11 @@ class ModelTrainer:
             # visualization step
             if (iteration % self.training_config["visualize_every"] == (self.training_config["visualize_every"] - 1) or intial_pass):
                 visuals = self.model.prepare_visuals()
-                # text = self.model.prepare_text_visuals()
-                # self.logger.log_text(
-                #     tag=f"Train/Predicions", text=text, iteration=iteration)
+                model_field = self.global_configs["model"]["model_field"]
+                if (model_field == "vgg"):
+                    text = self.model.prepare_text_visuals()
+                    self.logger.log_text(
+                        tag=f"Train/Predicions", text=text, iteration=iteration)
                 self.visualizer.visualize(visuals, epoch, iteration)
 
             # log writer
@@ -124,14 +121,21 @@ class ModelTrainer:
                     f'[{epoch:03d}/{batch_idx:05d}] train_loss: {avg_train_loss["loss"]:.6f}')
                 self.logger.add_scalar(
                     "Train/Loss", avg_train_loss["loss"], iteration)
-                # self.logger.add_scalar(
-                #     "Train/KLWeight", self.model.kl_weight, iteration)
-                # self.logger.add_scalar(
-                #     "Train/L1Weight", self.model.reconst_weight, iteration)
-                self.logger.add_scalar(
-                    "Train/LR_AE", self.model.opt_ae.param_groups[0]['lr'], iteration)
-                self.logger.add_scalar(
-                    "Train/LR_Disc", self.model.opt_disc.param_groups[0]['lr'], iteration)
+                model_field = self.global_configs["model"]["model_field"]
+                if model_field == "vae":
+                    self.logger.add_scalar(
+                        "Train/KLWeight", self.model.kl_weight, iteration)
+                    self.logger.add_scalar(
+                        "Train/L1Weight", self.model.reconst_weight, iteration)
+
+                if (model_field == "globalPVQVAE" and self.global_configs["globalPVQVAE"]["use_disc"]):
+                    self.logger.add_scalar(
+                        "Train/LR_AE", self.model.opt_ae.param_groups[0]['lr'], iteration)
+                    self.logger.add_scalar(
+                        "Train/LR_Disc", self.model.opt_disc.param_groups[0]['lr'], iteration)
+                else:
+                    self.logger.add_scalar(
+                        "Train/LR", self.model.optimizer[0]['lr'], iteration)
                 self._add_scalars(avg_train_loss, iteration)
                 self.train_vars.last_loss = avg_train_loss
                 train_loss_running = self._init_train_loss_dict()

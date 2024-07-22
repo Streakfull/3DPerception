@@ -11,7 +11,7 @@ class SignedIou(BaseMetric):
         self.thresh = thresh
 
     def calc(self, x, x_gt):
-        thres_gt = 0.0
+        thres_gt = self.thresh
 
         # compute iou
         # > 0 free space, < 0 occupied

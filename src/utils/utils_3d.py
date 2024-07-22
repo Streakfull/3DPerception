@@ -9,6 +9,7 @@ import torchvision.utils as vutils
 import imageio
 import einops
 from einops import rearrange, repeat
+import yaml
 
 from pytorch3d.renderer import (
     look_at_view_transform,
@@ -32,6 +33,10 @@ from pytorch3d.renderer import (
 from pytorch3d.transforms import RotateAxisAngle
 from pytorch3d.structures import Meshes
 import torch
+
+
+configs_path = "src/configs/global_configs.yaml"
+configs = yaml.safe_load(configs_path)
 
 
 def init_mesh_renderer(image_size=512, dist=3.5, elev=90, azim=90, camera='0', device='cuda:0'):
@@ -135,7 +140,7 @@ def render_mesh(renderer, mesh, color=None, norm=True):
     return images.permute(0, 3, 1, 2)
 
 
-def sdf_to_mesh(sdf, level=0.0002, color=None, render_all=False):
+def sdf_to_mesh(sdf, level=0.05, color=None, render_all=False):
     # device='cuda'
     device = sdf.device
 
@@ -155,24 +160,22 @@ def sdf_to_mesh(sdf, level=0.0002, color=None, render_all=False):
     faces = []
     verts_rgb = []
 
+    if (configs["dataset"]["dataset_field"] == "shape_net_v3_sdf"):
+        level = 0.1
+
     for i in range(nimg_to_render):
         sdf_i = sdf[i, 0].detach().cpu().numpy()
         # verts_i, faces_i = mcubes.marching_cubes(sdf_i, 0.02)
         verts_i, faces_i = mc.marching_cubes(sdf_i, level)
         verts_i = verts_i / n_cell - .5
-        verts_i[:, 0] = verts_i[:, 0]*-1
-        verts_i[:, 2] = verts_i[:, 2]*-1
+        if (configs["dataset"]["dataset_field"] == "shape_net_v2_sdf"):
+            verts_i[:, 0] = verts_i[:, 0]*-1
+            verts_i[:, 2] = verts_i[:, 2]*-1
         verts_i[:, [0, 1, 2]] = verts_i[:, [2, 1, 0]]
         rot_func = RotateAxisAngle(-45, "Y", device="cpu")
         verts_i = rot_func.transform_points(
             torch.Tensor(verts_i)).detach().cpu().numpy()
-        # verts_i[:, 0] = verts_i[:, 0]*-1
-        # verts_i[:, 2] = verts_i[:, 2]*-1
-        # verts_i[:, 1] = verts_i[:, 1]*-1
         verts_i = torch.from_numpy(verts_i).float().to(device)
-        # verts_i[:, 0] = verts_i[:, 0]*-1
-        # verts_i[:, 2] = verts_i[:, 2]*-1
-        # verts_i[:, [0, 1, 2]] = verts_i[:, [0, 2, 1]]
         faces_i = torch.from_numpy(faces_i.astype(np.int64)).to(device)
         text_i = torch.ones_like(verts_i).to(device)
         if color is not None:
@@ -204,6 +207,10 @@ def render_sdf(mesh_renderer, sdf, level=0.05, color=None, render_imsize=256, re
         ref: https://github.com/shubhtuls/PixelTransformer/blob/03b65b8612fe583b3e35fc82b446b5503dd7b6bd/data/base_3d.py
     """
     # device='cuda'
+    configs_path = "src/configs/global_configs.yaml"
+
+    if (configs["dataset"]["dataset_field"] == "shape_net_v3_sdf"):
+        level = 0.1
     device = sdf.device
     bs = sdf.shape[0]
 

@@ -25,6 +25,4 @@ class VQLoss(nn.Module):
 
         nll_loss = torch.mean(rec_loss)
         loss = nll_loss + self.codebook_weight * codebook_loss.mean()
-        # import pdb
-        # pdb.set_trace()
         return {"loss": loss, "l1": l1_copy, "codebook": codebook_loss, "p": torch.abs(p_loss.detach().mean())*10}
