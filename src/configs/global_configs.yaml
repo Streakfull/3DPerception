@@ -32,7 +32,7 @@ dataset:
   dataset_field: shape_net_v2_sdf
   path: ../../datasets/shapenet_orig/ShapeNetCore.v2  # For local testing without downloading shape => change to local_raw_dataset/ShapeNet
     # Can be overriden by dataset specific path
-  overfit_size: 1
+  overfit_size: 4
   split: train # train | valid | test
   is_overfit: True
 
@@ -75,7 +75,7 @@ dataset:
     path: src/raw_dataset/ShapeNetDISN/SDF_v1_64
 
 model:
-  model_field:  pvqvae
+  model_field:  vgg
   dummy_classifier:
     model_filepath: models/dummy_classifier.py
     model_class: DummyClassifier
