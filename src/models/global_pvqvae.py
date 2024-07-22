@@ -51,7 +51,7 @@ class GlobalPVQVAE(BaseModel):
             self.opt_ae, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
 
         self.opt_disc = torch.optim.Adam(self.criterion.discriminator.parameters(),
-                                         lr=self.configs["lr"], betas=(0.5, 0.9))
+                                         lr=4.5e-6, betas=(0.5, 0.9))
         self.schedulerDisc = optim.lr_scheduler.StepLR(
             self.opt_disc, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
 

@@ -30,7 +30,7 @@ class VQLossDisc(nn.Module):
                  disc_loss="hinge", disc_start=25001, disc_factor=1):
         super().__init__()
         self.codebook_weight = codebook_weight
-        self.perceptual_weight = 1
+        self.perceptual_weight = 1.5
         self.discriminator_weight = disc_weight
         if (self.perceptual_weight > 0):
             self.LPIPIS = LPIPS(ckpt_path=vgg_checkpoint).eval()

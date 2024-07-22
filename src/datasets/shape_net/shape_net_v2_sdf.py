@@ -24,15 +24,15 @@ class ShapeNetV2SDF(BaseShapeNet):
     def get_shape_sdf(self, shapenet_key):
         try:
             sdf = np.load(
-                f"{self.dataset_path}/{shapenet_key}/models/model_normalized_size-64_pd-4_tr-6.npy")
-            # print(":HIII")
-            # sdf = np.clip(sdf, a_min=0, a_max=0.2)
-            y = None
+                f"{self.dataset_path}/{shapenet_key}/models/model_normalized_size-64_pd-4_tr-5.npy")
+            sdf = np.clip(sdf, a_min=-0.2, a_max=0.2)
+            sdf = sdf * 5
         except:
+            print("Y NOT FOUND")
             y = f"{self.dataset_path}/{shapenet_key}"
             sdf = np.zeros((64, 64, 64))
 
-        return sdf, y
+        return sdf, ""
 
     @staticmethod
     def move_batch_to_device(batch, device):

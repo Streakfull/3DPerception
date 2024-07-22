@@ -135,7 +135,7 @@ def render_mesh(renderer, mesh, color=None, norm=True):
     return images.permute(0, 3, 1, 2)
 
 
-def sdf_to_mesh(sdf, level=0.02, color=None, render_all=False):
+def sdf_to_mesh(sdf, level=0.0002, color=None, render_all=False):
     # device='cuda'
     device = sdf.device
 
@@ -160,6 +160,8 @@ def sdf_to_mesh(sdf, level=0.02, color=None, render_all=False):
         # verts_i, faces_i = mcubes.marching_cubes(sdf_i, 0.02)
         verts_i, faces_i = mc.marching_cubes(sdf_i, level)
         verts_i = verts_i / n_cell - .5
+        verts_i[:, 0] = verts_i[:, 0]*-1
+        verts_i[:, 2] = verts_i[:, 2]*-1
         verts_i[:, [0, 1, 2]] = verts_i[:, [2, 1, 0]]
         rot_func = RotateAxisAngle(-45, "Y", device="cpu")
         verts_i = rot_func.transform_points(
@@ -190,7 +192,7 @@ def sdf_to_mesh(sdf, level=0.02, color=None, render_all=False):
     return p3d_mesh
 
 
-def render_sdf(mesh_renderer, sdf, level=0.1, color=None, render_imsize=256, render_all=False):
+def render_sdf(mesh_renderer, sdf, level=0.05, color=None, render_imsize=256, render_all=False):
     """ 
         shape of sdf:
         - bs, 1, nC, nC, nC 

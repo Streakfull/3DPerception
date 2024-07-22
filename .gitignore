@@ -176,3 +176,4 @@ nohup.out
 src/weights/*
 *_local.py
 simpleGan
+v2logs
