@@ -43,8 +43,9 @@ class ModelTrainer:
             self.global_configs["model"], self.training_config).get_model()
         self.visualizer = Visualizer(
             device=self.device, output_path=self.train_vars.visuals_path, logger=self.logger)
-        self.logger.log_model_summary(
-            self.model, batch_size=self.training_config["batch_size"])
+        if (self.global_configs["model"]["model_field"] != "decoder_transformer"):
+            self.logger.log_model_summary(
+                self.model, batch_size=self.training_config["batch_size"])
         self.model.to(self.device)
 
         self.is_overfit = self.global_configs["dataset"]["is_overfit"]

@@ -8,7 +8,8 @@ import torch.nn.functional as F
 from einops import rearrange
 from src.models.base_model import BaseModel
 from src.blocks.transformer.transformer import Transformer
-from src.models.pvqvae import PVQVAE
+# from src.models.pvqvae import PVQVAE
+from src.models.global_pvqvae import GlobalPVQVAE
 
 
 class RandTransformer(BaseModel):
@@ -19,8 +20,8 @@ class RandTransformer(BaseModel):
         self.tf = Transformer(config=configs)
         with open(configs_path, "r") as in_file:
             self.global_configs = yaml.safe_load(in_file)
-        vqvae_config = self.global_configs["model"]["pvqvae"]
-        self.vqvae = PVQVAE(vqvae_config)
+        vqvae_config = self.global_configs["model"]["globalPVQVAE"]
+        self.vqvae = GlobalPVQVAE(vqvae_config)
         self.vqvae.load_ckpt(configs['pvqvae']['ckpt_path'])
         self.vqvae.eval()
 
@@ -81,7 +82,6 @@ class RandTransformer(BaseModel):
         return ret
 
     def set_input(self, input=None, gen_order=None):
-
         self.x = input['sdf']
         self.x_idx = input['idx']
         self.z_q = input['z_q']
@@ -250,7 +250,7 @@ class RandTransformer(BaseModel):
             "reconstructions_pvqvae": self.x_recon,
             "target": self.x,
         }
-        uncond = self.uncond_gen(2)
+        uncond = self.uncond_gen(4)
         visuals["generated"] = uncond
         return visuals
 
@@ -274,16 +274,24 @@ class RandTransformer(BaseModel):
 
         # get dummy data
         data = self.get_dummy_input(bs=bs)
-        self.inference2(data, seq_len=None, topk=topk)
-        gen_tf = self.x_recon_tf
-        return gen_tf
+        data = self.inference2(data, seq_len=None, topk=topk)
+       # gen_tf = self.x_recon_tf
+        return data
 
     def load_ckpt(self, ckpt_path):
-        self.load_state_dict(torch.load(ckpt_path))
-        cprint.info(f"Model loaded from {ckpt_path}")
         state_dict = torch.load(self.configs['pvqvae']['ckpt_path'])
-        self.vqvae.load_state_dict(state_dict)
+        self.vqvae.load_state_dict(state_dict, strict=False)
         self.tf.embedding_encoder.load_state_dict(
             self.vqvae.quantize.embedding.state_dict())
 
         cprint.info(f"VQVAE loaded from {self.configs['pvqvae']['ckpt_path']}")
+        state_dict = torch.load(ckpt_path)
+        # state_dict_copy = {}
+        # for key in state_dict.keys():
+        #     if key == "tf.codebook.weight":
+        #         state_dict_copy["tf.embedding_encoder.weight"] = state_dict[key]
+        #     else:
+        #         state_dict_copy[key] = state_dict[key]
+        # self.load_state_dict(state_dict_copy)
+        self.load_state_dict(state_dict)
+        cprint.info(f"Model loaded from {ckpt_path}")
