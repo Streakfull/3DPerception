@@ -92,7 +92,7 @@ model:
     model_class: AutoEncoder
     metrics: iou,chamferDistance   # None | iou | chamferDistance
     lr: 1.0e-4
-    losses:
+    losses: None
     criterion: L1
     scheduler_step_size: 30
     scheduler_gamma: 0.5
