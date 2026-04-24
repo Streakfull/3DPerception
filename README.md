@@ -1,56 +1,105 @@
-# DL43D
+# VQGAN 3D Scene Reconstruction
 
-## Name
+> Learning compact discrete latent representations of 3D shapes using VQVAE variants with autoregressive transformer-based generation.
 
-DL43D Perception Praktikum
+**[Project Website](https://d1nds4el9kv5qg.cloudfront.net/)**
 
-## Description
+Built as part of the **3D AI Lab — Scene Reconstruction Praktikum (SS24)** at TUM, supervised by Prof. Dr. Angela Dai.
 
-This repo contains all related work for the DL43D perception course.
+![Full Pipeline](imgs/fullprocess.png)
 
-## Visuals
+## Overview
 
-- Any interesting visuals such as overview figure & training curves ..etc
+This project implements a full pipeline for **3D shape reconstruction and generation** using vector-quantized variational autoencoders (VQ-VAE). The pipeline operates in two stages:
+
+1. **Reconstruction** — A VQVAE model learns a compact discrete latent representation of 3D shapes from Truncated Signed Distance Fields (TSDFs). Each shape is encoded as a sequence of discrete codebook indices.
+2. **Generation** — An autoregressive transformer is trained on the codebook index sequences to generate novel 3D shapes. The predicted sequences are decoded through the VQVAE decoder to produce the final 3D output.
+
+### Scene Reconstruction
+
+![Scene Reconstruction](imgs/scene_recons.png)
+
+### Dense Reconstruction — Chairs
+
+![Dense Reconstruction Chairs](imgs/dense_recon_chairs.png)
+
+## Models
+
+| Model | Description |
+|-------|-------------|
+| **VQVAE** | Base vector-quantized VAE for 3D shape reconstruction from input TSDFs |
+| **PVQVAE** | Patched VQVAE — each spatial patch is encoded independently for finer-grained representations |
+| **VQVAE + Perceptual Loss** | VQVAE augmented with a 3D VGG perceptual loss for improved reconstruction quality |
+| **VQGAN** | Full adversarial setup — perceptual loss VQVAE trained with an additional discriminator |
+| **Autoregressive Transformer** | Generates codebook index sequences for unconditional 3D shape generation |
+| **VAE** | Standard 3D variational autoencoder baseline |
+
+## Project Structure
+
+```
+src/
+├── blocks/          # Network building blocks (encoder, decoder, quantizer, attention, transformer)
+├── configs/         # YAML configuration files
+├── datasets/        # ShapeNet dataset loaders (voxels, SDF, point clouds)
+├── losses/          # Loss functions (L1, VQ, LPIPS, Dice, KL divergence)
+├── metrics/         # Evaluation metrics (IoU, Chamfer Distance)
+├── models/          # Model definitions (AutoEncoder, PVQVAE, GlobalPVQVAE, VAE, Transformer)
+├── training/        # Training loop, logging, visualization
+├── pre_processing/  # Codebook index extraction utilities
+└── utils/           # Visualization, 3D rendering, and helper functions
+```
+
+## Dataset
+
+The project uses the [ShapeNet](https://shapenet.org/) dataset. Multiple data representations are supported:
+- **ShapeNetCore.v2** — Signed Distance Fields (SDF)
+- **ShapeNetVox32** — 32³ voxelized models
+- **ShapeNetPointClouds** — Point cloud representations
 
 ## Installation
 
-##### Steps neededed to run the project on the 3DML cluster provided by TUM
+```bash
+git clone https://github.com/<your-username>/3DPerception.git
+cd 3DPerception
+pip install -r requirements.txt
+```
 
-##### Note: This is an old configuaration & needs to be revised and re-tested when access to the cluster is obtained
+### Key Dependencies
 
-- `ssh <user>@ml3d.vc.in.tum.de` - ssh into the login node
-  - You will be prompted to enter your password
-- `salloc --gpus=1`
-- `mkdir /cluster/54/<user>`
-- `cd /cluster/54/<user>`
-- `git clone https://<username>:<personal_token>@gitlab.com/gitlab-org/gitlab.git`
-- `cd dl43d`
-- `poetry install`
-- `poetry shell`
-- `pip3 install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio==0.11.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html`
-- `poetry run jupyter notebook --no-browser --ip=0.0.0.0 --port=8888`
-- From your local machine: `ssh -NL 3000:TUINI15-<connected_node>.vc.in.tum.de:8888 <user>@ml3d.vc.in.tum.de`
-- Run the `initial_setup.ipynb` notebook to obtain the dataset
+- PyTorch 2.2
+- PyTorch3D (for mesh rendering)
+- einops, omegaconf, tensorboard
+- trimesh, open3d, k3d (3D visualization)
 
 ## Usage
 
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+### Training
 
-## Roadmap
+Configure the model and training parameters in `src/configs/global_configs.yaml`, then:
 
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+```python
+# In a notebook or script
+from src.training.ModelTrainer import ModelTrainer
+from src.datasets.shape_net.shape_net_v2_sdf import ShapeNetV2SDF
 
-## General Links
+trainer = ModelTrainer(dataset_type=ShapeNetV2SDF)
+trainer.train()
+```
 
-##### This section contains any useful links found
+Or use the provided notebooks:
+- **`Train.ipynb`** — Main training notebook
+- **`ModelEval.ipynb`** — Model evaluation and visualization
+- **`EvaluateCodeBook.ipynb`** — Codebook utilization analysis
+- **`demo_model.ipynb`** — Demo inference
 
-##### This section contains any useful links found
+### Configuration
 
-## Authors and acknowledgment
+All hyperparameters are managed through `src/configs/global_configs.yaml`. Key settings:
+- `model.model_field` — Select model variant (`globalPVQVAE`, `pvqvae`, `auto_encoder`, `vae3d`, `decoder_transformer`)
+- `dataset.dataset_field` — Select data format (`shape_net_v2_sdf`, `shape_net_v3_sdf`, `shape_net_vox`)
+- Training schedule, learning rates, and loss weights are all configurable
 
-- Mino Erstella - m.estrella@rum.de
-- Youssef Youssef - youssef@youssef.tum.de
+## Authors
 
-## Project status
-
-The project is currently in the early development phase.
+- **Mino Estrella** — mino.estrella@tum.de
+- **Youssef Youssef** — youssef.youssef@tum.de

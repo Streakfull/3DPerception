@@ -33,5 +33,4 @@ def nonlinearity(x):
         tensor (D x D): Output
     """
 
-    # TODO: Use builder and configurable loss function
     return x*torch.sigmoid(x)

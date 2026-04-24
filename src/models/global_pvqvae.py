@@ -5,10 +5,9 @@ from src.blocks.quantizer import VectorQuantizer
 from src.blocks.encoder import Encoder
 from src.models.base_model import BaseModel
 from src.blocks.decoder import Decoder
-from src.losses.build_loss import BuildLoss
 from src.utils.model_utils import init_weights
 from einops import rearrange
-from torch import nn, optim
+from torch import optim
 import torch
 from termcolor import cprint
 
@@ -27,7 +26,6 @@ class GlobalPVQVAE(BaseModel):
         self.quantize = VectorQuantizer(
             n_e=self.n_embed, e_dim=self.embed_dim, beta=1.0)
         self.configs = configs
-        # self.cur_bs = 8
         self.quant_conv = nn.Conv3d(
             in_channels=self.encoder.out_channels, out_channels=self.embed_dim, kernel_size=1)
 
@@ -44,7 +42,6 @@ class GlobalPVQVAE(BaseModel):
         else:
             self.criterion = VQLoss(
                 vgg_checkpoint=configs['vgg_ckpt'], perceptual_weight=configs["perceptual_weight"])
-        self.resolution = configs["auto_encoder_networks"]["resolution"]
         self.resolution = configs["auto_encoder_networks"]["resolution"]
 
         if (self.use_disc):
@@ -236,8 +233,6 @@ class GlobalPVQVAE(BaseModel):
         state_dict = torch.load(ckpt_path)
         state_dict_copy = {}
         for key in state_dict.keys():
-            # if "criterion" in key:
-            #     continue
             state_dict_copy[key] = state_dict[key]
 
         self.load_state_dict(state_dict_copy, strict=False)

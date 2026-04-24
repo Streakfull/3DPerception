@@ -51,8 +51,6 @@ def get_model_size(model):
     size_all_mb = (param_size + buffer_size) / 1024**2
     size = 'Model size: {:.3f}MB'.format(size_all_mb)
     params_count = 'Total_params: {:.3}M'.format(total_params/1e6)
-    print(size)
-    print(params_count)
     return size, params_count
 
 

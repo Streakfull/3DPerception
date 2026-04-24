@@ -4,10 +4,9 @@ from src.blocks.quantizer import VectorQuantizer
 from src.blocks.encoder import Encoder
 from src.models.base_model import BaseModel
 from src.blocks.decoder import Decoder
-from src.losses.build_loss import BuildLoss
 from src.utils.model_utils import init_weights
 from einops import rearrange
-from torch import nn, optim
+from torch import optim
 import torch
 
 
@@ -25,7 +24,6 @@ class PVQVAE(BaseModel):
         self.quantize = VectorQuantizer(
             n_e=self.n_embed, e_dim=self.embed_dim, beta=1.0)
         self.configs = configs
-        # self.cur_bs = 8
         self.quant_conv = nn.Conv3d(
             in_channels=self.encoder.out_channels, out_channels=self.embed_dim, kernel_size=1)
 
@@ -86,7 +84,6 @@ class PVQVAE(BaseModel):
         return dec
 
     @staticmethod
-    # def unfold_to_cubes(self, x, cube_size=8, stride=8):
     def unfold_to_cubes(x, cube_size=8, stride=8):
         """ 
             assume x.shape: b, c, d, h, w 
@@ -101,7 +98,6 @@ class PVQVAE(BaseModel):
         return x_cubes
 
     @staticmethod
-    # def fold_to_voxels(self, x_cubes, batch_size, ncubes_per_dim):
     def fold_to_voxels(x_cubes, batch_size, ncubes_per_dim):
         x = rearrange(x_cubes, '(b p) c d h w -> b p c d h w', b=batch_size)
         x = rearrange(x, 'b (p1 p2 p3) c d h w -> b c (p1 d) (p2 h) (p3 w)',

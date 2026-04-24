@@ -45,14 +45,8 @@ def init_mesh_renderer(image_size=512, dist=3.5, elev=90, azim=90, camera='0', d
     # So we move the camera by 180 in the azimuth direction so it is facing the front of the cow.
 
     if camera == '0':
-        # for vox orientation
-        # dist, elev, azim = 1.7, 20, 20 # shapenet
-        # dist, elev, azim = 3.5, 90, 90 # front view
-
-        # dist, elev, azim = 3.5, 0, 135 # front view
         camera_cls = FoVPerspectiveCameras
     else:
-        # dist, elev, azim = 5, 45, 135 # shapenet
         camera_cls = FoVOrthographicCameras
 
     R, T = look_at_view_transform(dist, elev, azim)
@@ -74,20 +68,6 @@ def init_mesh_renderer(image_size=512, dist=3.5, elev=90, azim=90, camera='0', d
     # -z direction.
     lights = PointLights(device=device, location=[[1.0, 1.0, 0.0]])
 
-    # Create a Phong renderer by composing a rasterizer and a shader. The textured Phong shader will
-    # interpolate the texture uv coordinates for each vertex, sample from a texture image and
-    # apply the Phong lighting model
-    # renderer = MeshRenderer(
-    #     rasterizer=MeshRasterizer(
-    #         cameras=cameras,
-    #         raster_settings=raster_settings
-    #     ),
-    #     shader=SoftPhongShader(
-    #         device=device,
-    #         cameras=cameras,
-    #         lights=lights
-    #     )
-    # )
     renderer = MeshRenderer(
         rasterizer=MeshRasterizer(
             cameras=cameras, raster_settings=raster_settings),

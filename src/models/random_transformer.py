@@ -286,12 +286,5 @@ class RandTransformer(BaseModel):
 
         cprint.info(f"VQVAE loaded from {self.configs['pvqvae']['ckpt_path']}")
         state_dict = torch.load(ckpt_path)
-        # state_dict_copy = {}
-        # for key in state_dict.keys():
-        #     if key == "tf.codebook.weight":
-        #         state_dict_copy["tf.embedding_encoder.weight"] = state_dict[key]
-        #     else:
-        #         state_dict_copy[key] = state_dict[key]
-        # self.load_state_dict(state_dict_copy)
         self.load_state_dict(state_dict)
         cprint.info(f"Model loaded from {ckpt_path}")

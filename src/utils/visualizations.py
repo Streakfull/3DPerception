@@ -20,29 +20,16 @@ from termcolor import cprint
 
 
 def tensor2im(image_tensor, imtype=np.uint8):
-    # image_numpy = image_tensor[0].cpu().float().numpy()
-    # if image_numpy.shape[0] == 1:
-    #     image_numpy = np.tile(image_numpy, (3, 1, 1))
-    # image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0
-    # return image_numpy.astype(imtype)
-
     n_img = min(image_tensor.shape[0], 16)
     image_tensor = image_tensor[:n_img]
 
     if image_tensor.shape[1] == 1:
         image_tensor = image_tensor.repeat(1, 3, 1, 1)
 
-    # if image_tensor.shape[1] == 4:
-        # import pdb; pdb.set_trace()
-
     image_tensor = vutils.make_grid(image_tensor, nrow=4)
 
     image_numpy = image_tensor.cpu().float().numpy()
-    # import pdb
-    # pdb.set_trace()
     image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.
-    # image_numpy = np.rot90(image_numpy)
-    # image_numpy = (np.transpose(image_numpy, (2, 1, 0)) + 1) / 2.0 * 255.
 
     return image_numpy.astype(imtype)
 
@@ -92,9 +79,7 @@ def save_voxels(pred, gt, save_path, iteration, is_train=True):
     fig = visualize_png(gt_plots + pred_plots,
                         f"{title}/Target-Reconstruction", rows=2)
     final_save_path = f"{save_path}/{title}_{int(iteration)}"
-    print(final_save_path, "saved")
     fig.savefig(final_save_path)
-    print(final_save_path, "saved")
     return fig
 
 
@@ -102,7 +87,6 @@ def plot_voxels(voxels_input, rot01=0, rot02=0, rot12=0, nimgs=3):
     output = []
     for i in range(nimgs):
         voxels = voxels_input[i]
-        # import pdb; pdb.set_trace()
         voxels[voxels >= 0.5] = 1
         voxels[voxels < 0.5] = 0
         voxels = voxels.rot90(rot01, (0, 1))
@@ -135,7 +119,6 @@ def visualize_images(images, rows=5):
     if (columns == 0):
         columns = 1
     fig = plt.figure(figsize=(20, 20))
-    # fig.suptitle('ss', fontsize=20)
     for i, img in enumerate(images):
         fig.add_subplot(rows, columns, i + 1)
         plt.imshow(img)
@@ -183,7 +166,6 @@ def visualize_png2(images, title, rows=5):
 
 def visualize_sdf(sdf: np.array, filename: Path) -> None:
     assert sdf.shape[0] == sdf.shape[1] == sdf.shape[2], "SDF grid has to be of cubic shape"
-    print(f"Creating SDF visualization for {sdf.shape[0]}^3 grid ...")
 
     voxels = np.stack(np.meshgrid(range(sdf.shape[0]), range(
         sdf.shape[1]), range(sdf.shape[2]))).reshape(3, -1).T
@@ -220,23 +202,16 @@ def visualize_sdf(sdf: np.array, filename: Path) -> None:
                            vertex_colors=cube_vertex_colors, process=False)
     img = visualize_mesh(cube_vertices, cube_faces, flip_axes=True)
     mesh.export(str(filename))
-    print(f"Exported to {filename}")
 
 
 def visualize_mesh(vertices, faces, flip_axes=False):
     plot = k3d.plot(name='points', grid_visible=False,
                     grid=(-0.55, -0.55, -0.55, 0.55, 0.55, 0.55))
 
-    # vertices[:, 2] = vertices[:, 2] * -1
-    # vertices[:, [0, 1, 2]] = vertices[:, [0, 2, 1]]
     if flip_axes:
         pass
-        # vertices[:, 2] = vertices[:, 2] * -1
 
         vertices[:, [0, 1, 2]] = vertices[:, [2, 0, 1]]
-
-        # vertices[:, 1] = vertices[:, 1] * -1
-        # vertices[:, [0, 1, 2]] = vertices[:, [1, 0, 2]]
 
     plt_mesh = k3d.mesh(vertices.astype(np.float32),
                         faces.astype(np.uint32), color=0xd0d0d0)
@@ -252,8 +227,6 @@ def visualize_mesh_file(filePath, flip_axes=False):
     vertices = mesh.vertices
     faces = mesh.faces
     visualize_mesh(vertices, faces, flip_axes=flip_axes)
-    print(vertices.shape)
-    print(mesh)
 
 
 def visualize_sdf_as_voxels(sdf, output_path, level=0.5):

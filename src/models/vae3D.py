@@ -4,7 +4,6 @@ from torch import nn
 from src.losses.KL_divergence import KLDivergence
 from torch import optim
 from src.losses.build_loss import BuildLoss
-from src.utils.model_utils import init_weights
 from einops import rearrange
 
 
@@ -198,11 +197,9 @@ class VAE3D(BaseModel):
         self.scheduler = optim.lr_scheduler.StepLR(
             self.optimizer, step_size=configs["scheduler_step_size"], gamma=configs["scheduler_gamma"])
 
-    @ property
+    @property
     def is_vae(self):
-        # return True
         return True
-        return self.kl_weight > 0
 
     def forward(self, x):
         self.target = x
@@ -217,8 +214,6 @@ class VAE3D(BaseModel):
         z = rearrange(x, 'bs (c l w h) -> bs c l w h', c=1, l=8, w=8, h=8)
 
         x = self.decoder(z)*0.2
-        # x = self.norm_out_2(x)
-        # x = self.sigmoid(x)*0.2
         self.predictions = x
         return x
 
@@ -228,17 +223,7 @@ class VAE3D(BaseModel):
         return mu + (eps * std)
 
     def init_weights(self):
-        return
-        init_type = self.configs['weight_init']
-        gain = self.configs['gain']
-        init_weights(self, init_type=init_type, gain=gain)
-        init_weights(self.encoder, init_type=init_type, gain=gain)
-        init_weights(self.decoder, init_type=init_type, gain=gain)
-        init_weights(self.encfc1, init_type=init_type, gain=gain)
-        init_weights(self.mu_fc, init_type=init_type, gain=gain)
-        init_weights(self.logvar_fc, init_type=init_type, gain=gain)
-        init_weights(self.dec_fc1, init_type=init_type, gain=gain)
-        init_weights(self.decoder, init_type=init_type, gain=gain)
+        pass
 
     def set_iteration(self, iteration):
         self.iteration = iteration
@@ -252,32 +237,12 @@ class VAE3D(BaseModel):
             x = self.decoder(z)
             return x
 
-    # def sample_uniform(self, n_sammples=1, device="cuda:0"):
-    #     self.eval()
-    #     with torch.no_grad():
-    #         z = torch.randn(size=(n_samples, 256)).to(device=device)
-    #         x = self.dec_fc1(z)
-    #         z = rearrange(x, 'bs (c l w h) -> bs c l w h', c=1, l=8, w=8, h=8)
-    #         x = self.decoder(z)
-    #         return x
-
-        # self.loss = (self.reconst_weight*self.reconst_loss*1/4) + \
-        #     (self.kl_weight*self.kl_loss)
-        if (self.use_kl):
-            self.loss = (self.reconst_weight*self.reconst_loss *
-                         (1/self.predictions.shape[0])) + (self.kl_weight*self.kl_loss)
-        else:
-            self.loss = (self.reconst_weight*self.reconst_loss *
-                         (1/self.predictions.shape[0]))
-
     def set_loss(self):
         self.reconst_loss = self.criterion(
             self.predictions, self.target)
         self.set_kl_weight()
         self.kl_loss = self.kl(self.mu, self.logvar)
 
-        # self.loss = (self.reconst_weight*self.reconst_loss*1/4) + \
-        #     (self.kl_weight*self.kl_loss)
         if (self.use_kl):
             self.loss = (self.reconst_weight*self.reconst_loss *
                          (1/self.predictions.shape[0])) + (self.kl_weight*self.kl_loss)
@@ -285,7 +250,6 @@ class VAE3D(BaseModel):
             self.loss = (self.reconst_weight*self.reconst_loss)
 
     def set_kl_weight(self):
-        # 14999
         if (not self.use_cycles):
             self.kl_weight = self.base_kl_weight
             return
@@ -299,7 +263,6 @@ class VAE3D(BaseModel):
         self.kl_weight = min(current_iteration/(self.cycle_iter*0.5), 1)
         if (self.iteration//self.stop_cycle_count) >= 1:
             self.kl_weight = 1
-        # self.kl_weight /= (self.encoder_channels * 8 * 8 * 8)
         current_cycle = self.iteration//self.cycle_iter
         self.kl_weight = (self.base_kl_weight * self.kl_weight) + \
             (current_cycle*self.base_kl_weight) + 1.0e-8
@@ -323,7 +286,6 @@ class VAE3D(BaseModel):
 
     def get_metrics(self):
         return {'loss': self.loss.data,
-                # 'l1': self.reconst_loss.detach()/(64**3)*(1/self.predictions.shape[0]),
                 'l1': self.reconst_loss.detach(),
                 'kl': self.kl_loss.data, 'kl_weight': self.kl_weight,
                 'mu_mean': self.mu.detach().mean(),

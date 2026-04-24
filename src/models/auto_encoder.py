@@ -22,7 +22,6 @@ class AutoEncoder(BaseModel):
         self.configs = configs
         init_type = self.configs['weight_init']
         if (init_type != "None"):
-            print("Initializing model weights with %s initialization" % init_type)
             self.init_weights()
         self.set_metrics()
 

@@ -12,7 +12,6 @@ class ShapeNetV3SDF(BaseShapeNet):
     def __getitem__(self, index):
         shape_key, class_index, class_name, id = super().__getitem__(index)
         sdf = self.get_shape_sdf(shape_key)
-        # sdf = self.transform(sdf)
         return {
             "sdf": sdf[np.newaxis, :, :, :],
             "label": class_index,
@@ -37,7 +36,6 @@ class ShapeNetV3SDF(BaseShapeNet):
         h5_f = h5py.File(sdf_h5_file, 'r')
         sdf = h5_f['pc_sdf_sample'][:].astype(np.float32)
         sdf = (sdf).reshape(64, 64, 64)
-        # sdf = np.clip(sdf, a_min=-1, a_max=1)
         return sdf
 
     def transform(self, sdf):

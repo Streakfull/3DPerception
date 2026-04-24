@@ -32,7 +32,6 @@ class ShapeNetSDF(BaseShapeNet):
         }
 
     def get_sdf_grid(self, shapenet_key):
-       # return np.ones((64, 64, 64)) * 0.5
         grid = np.load(
             f"{self.dataset_path}/{shapenet_key}.npz")['arr'].astype(np.float16)
 

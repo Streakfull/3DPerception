@@ -69,9 +69,7 @@ class ModelTrainer:
                 enumerate(self.train_dataloader), total=len(self.train_dataloader))
         self.model.set_iter_per_epoch(len(self.train_dataloader))
         for batch_idx, batch in enumartion:
-            # for batch_idx, batch in enumerate(self.train_dataloader):
             self.model.train()
-            # torch.cuda.empty_cache()
             iteration = epoch * len(self.train_dataloader) + batch_idx
             if iteration < self.train_vars.start_iteration:
                 continue
@@ -81,9 +79,7 @@ class ModelTrainer:
             self.model.step(x)
             losses = self.model.get_metrics()
             loss = losses.get("loss")
-            # iou = losses.get("signedIou")
             train_loss_running["loss"] += loss
-            # train_loss_running["signedIou"] += iou
             self._add_losses_to_dict(train_loss_running)
             batch_iteration += 1
 

@@ -10,11 +10,7 @@ from einops import rearrange
 def iou(x_gt, x, thres):
     thres_gt = 0.0
 
-    # compute iou
-    # > 0 free space, < 0 occupied
     x_gt_mask = x_gt.clone().detach()
-    #     x_gt_mask[x_gt < thres_gt] = 0.
-    #     x_gt_mask[x_gt >= thres_gt] = 1.
 
     x_mask = x.clone().detach()
     x_mask[x < thres] = 0.
@@ -27,19 +23,6 @@ def iou(x_gt, x, thres):
 
     iou = inter.sum(1) / (union.sum(1) + 1e-12)
     return iou
-
-
-# def iou(gt, pred ,thresh=0.5):
-#     pred = pred.clone()
-#     gt = gt.clone()
-#     # gt[gt<=0.4] = 0
-#     # gt[gt>=0.4] = 1
-#     pred[pred <= thresh] = 0
-#     pred[pred >= thresh] = 1
-#     # print((pred!=gt).sum())
-#     intersection = torch.sum(pred.mul(gt)).float()
-#     union = torch.sum(torch.ge(pred.add(gt), 1)).float()
-#     return intersection / union
 
 
 def save_image(image_numpy, image_path):

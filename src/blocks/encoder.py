@@ -17,7 +17,6 @@ class Encoder(nn.Module):
         self.in_channels = in_channels
         self.l1_output = self.in_channels * 64
         self.out_channels = out_channels
-        # downsampling
         self.norm_in = Normalize(in_channels=in_channels)
         self.conv_in = torch.nn.Conv3d(in_channels,
                                        self.l1_output,
@@ -38,8 +37,6 @@ class Encoder(nn.Module):
                                          dropout=dropout))
                 block_in = block_out
                 if curr_res in attn_resolutions:
-                    print('[*] Enc has Attn at i_level, i_block: %d, %d' %
-                          (i_level, i_block))
                     attn.append(AttnBlock(block_in))
 
                 down = nn.Module()
@@ -85,25 +82,17 @@ class Encoder(nn.Module):
         # self.norm_out_2 = Normalize(64)
 
     def forward(self, x):
-        # assert x.shape[2] == x.shape[3] == self.resolution, "{}, {}, {}".format(
-        #     x.shape[2], x.shape[3], self.resolution)
-
-        # h = self.norm_in(x)
         h = self.conv_in(x)
         for i_level in range(self.num_resolutions):
             for i_block in range(self.num_res_blocks):
-                # h = self.down[i_level].block[i_block](hs[-1], temb)
                 h = self.down[i_level].block[i_block](h)
 
                 if len(self.down[i_level].attn) > 0:
                     h = self.down[i_level].attn[i_block](h)
-                # hs.append(h)
             if i_level != self.num_resolutions-1:
-                # hs.append(self.down[i_level].downsample(hs[-1]))
                 h = self.down[i_level].downsample(h)
 
         # middle
-        # h = hs[-1]
         h = self.mid.block_1(h)
         h = self.mid.attn_1(h)
         h = self.mid.block_2(h)
@@ -112,7 +101,5 @@ class Encoder(nn.Module):
         h = self.norm_out(h)
         h = nonlinearity(h)
         h = self.conv_out(h)
-        # h = self.norm_out_2(h)
-        # h = nonlinearity(h)
 
         return h

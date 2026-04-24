@@ -22,7 +22,6 @@ class SDFVisualizer:
             im, mesh = render_sdf(self.render, sdf)
 
         self.handle_images(im)
-        # self.handle_gif(mesh)
 
     def handle_images(self, images):
         imgs = tensor2im(images)
@@ -34,9 +33,6 @@ class SDFVisualizer:
         if (self.logger is not None):
             self.logger.log_image(
                 f"Train/{self.key}", images, self.iteration)
- # for i in range(images.shape[0]):
-        #     self.logger.log_image(
-        #         f"Train/{self.key}", images[i].squeeze(), self.iteration+i)
 
     def handle_gif(self, mesh):
         try:
@@ -44,5 +40,4 @@ class SDFVisualizer:
                 save_mesh_as_gif(self.render, mesh,
                                  out_name=f"{self.output_path}/{self.key}/epoch_{self.epoch}_iter_{self.iteration}.gif")
         except:
-            import pdb
-            pdb.set_trace()
+            pass
